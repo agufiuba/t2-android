@@ -15,5 +15,6 @@
     </string>
     <string name="facebook_app_id">1454660677922893</string>
     <string name="fb_login_protocol_scheme">fb1454660677922893</string>
+    <string name="auth_failed">\"Login Failed\"</string>
 
 </resources>
