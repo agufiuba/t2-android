@@ -3,13 +3,12 @@ package com.example.darius.taller_uber;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Fragment;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.FragmentActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
 import android.content.CursorLoader;
@@ -25,10 +24,8 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -40,9 +37,6 @@ import android.widget.Toast;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
-import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -56,34 +50,40 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends FragmentActivity implements LoaderCallbacks<Cursor> {
     private static final String TAG = "MainActivity";
-
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
     private UserLoginTask mAuthTask = null;
-
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
-
     private View mProgressView;
     private View mLoginFormView;
-    private LoginButton loginButton;
+    private CallbackManager callbackManager;
+    private LoginButton fbLoginButton;
+    private Button mEmailSignInButton;
+    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_login);
-        // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        callbackManager = CallbackManager.Factory.create();
 
-        mPasswordView = (EditText) findViewById(R.id.password);
+        load_layout_elements();
+
+        configureFaceBookButton(callbackManager, fbLoginButton);
+        configureFaceBook();
+        configurePasswordField();
+        configureSignInButton();
+        configureFireBase();
+    }
+
+    private void configurePasswordField(){
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -94,23 +94,23 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 return false;
             }
         });
+    }
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+    private void configureSignInButton(){
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 attemptLogin();
             }
         });
+    }
 
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-
+    private void configureFireBase() {
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
+                user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
@@ -121,7 +121,43 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 // ...
             }
         };
+    }
 
+    private void load_layout_elements() {
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        fbLoginButton = (LoginButton) findViewById(R.id.login_button);
+        mPasswordView = (EditText) findViewById(R.id.password);
+        mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mLoginFormView = findViewById(R.id.login_form);
+        mProgressView = findViewById(R.id.login_progress);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void configureFaceBookButton(CallbackManager callbackManager, LoginButton fbLoginButton) {
+        fbLoginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                System.out.println(loginResult.getAccessToken());
+            }
+
+            @Override
+            public void onCancel() {
+                System.out.println("CANCEL");
+            }
+
+            @Override
+            public void onError(FacebookException e) {
+                System.out.println("ERROR");
+            }
+        });
+    }
+
+    private void configureFaceBook(){
         try {//StackOverflow
             PackageInfo info = getPackageManager().getPackageInfo(
                 "com.example.darius.taller_uber",
@@ -136,27 +172,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } catch (NoSuchAlgorithmException e) {
 
         }
-
-        CallbackManager callbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().registerCallback(callbackManager,
-            new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    Log.d(TAG, "onAuthStateChanged:Facebook Login sucess");
-                }
-
-                @Override
-                public void onCancel() {
-                    Log.d(TAG, "onAuthStateChanged:Facebook Login Canceled");
-                }
-
-                @Override
-                public void onError(FacebookException exception) {
-                    Log.d(TAG, "onAuthStateChanged:Facebook Login Error");
-                }
-            });
     }
-
     @Override
     public void onStart() {
         super.onStart();
@@ -231,11 +247,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // If sign in fails, display a message to the user. If sign in succeeds
                     // the auth state listener will be notified and logic to handle the
                     // signed in user can be handled in the listener.
-                    if (task.isSuccessful()){
-                        Log.d(TAG,"attemptLogin: success");
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "attemptLogin: success");
                         FirebaseUser user = mAuth.getCurrentUser();
                         //TODO updateUI(user);
-                        
+
                     } else {
                         Log.w(TAG, "signInWithEmail:failed", task.getException());
                         Toast.makeText(LoginActivity.this, R.string.auth_failed,
