@@ -68,7 +68,13 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private LoginButton fbLoginButton;
     private Button mEmailSignInButton;
     private FirebaseUser user;
+    private Button register_button;
+    private Button login_button;
 
+
+//  // ButterKnife example
+//  @BindView(R.id.pe pito)
+//  private Button mPepito;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +135,16 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+        register_button = (Button) findViewById(R.id.register_button);
+        register_button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+            }
+        });
+
+        login_button = (Button) findViewById(R.id.login_button);
+
     }
 
     @Override
