@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -67,6 +68,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private LoginButton fbLoginButton;
     private Button mEmailSignInButton;
     private FirebaseUser user;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,13 +114,10 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 } else {
-                    // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
-                // ...
             }
         };
     }
@@ -172,6 +171,26 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         } catch (NoSuchAlgorithmException e) {
 
         }
+
+        //Facebook login
+        CallbackManager callbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().registerCallback(callbackManager,
+            new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    Log.d(TAG, "onAuthStateChanged:Facebook Login sucess");
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "onAuthStateChanged:Facebook Login Canceled");
+                }
+
+                @Override
+                public void onError(FacebookException exception) {
+                    Log.d(TAG, "onAuthStateChanged:Facebook Login Error");
+                }
+            });
     }
     @Override
     public void onStart() {
@@ -224,6 +243,29 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
+        }
+
+        if (!cancel) {
+            mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "attemptLogin: success");
+                            user = mAuth.getCurrentUser();
+                            //TODO updateUI(user);
+                        } else {
+                            Log.w(TAG, "signInWithEmail:failed", task.getException());
+                            Toast.makeText(LoginActivity.this, R.string.auth_failed,
+                                Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
         }
 
         if (cancel) {
