@@ -37,7 +37,6 @@ import android.widget.Toast;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -96,7 +95,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
+                    attemptLoginWithEmail();
                     return true;
                 }
                 return false;
@@ -108,7 +107,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptLogin();
+                attemptLoginWithEmail();
             }
         });
     }
@@ -158,6 +157,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
             @Override
             public void onSuccess(LoginResult loginResult) {
                 System.out.println(loginResult.getAccessToken());
+                startMapActivity();
             }
 
             @Override
@@ -187,26 +187,6 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         } catch (NoSuchAlgorithmException e) {
 
         }
-
-        //Facebook login
-        CallbackManager callbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().registerCallback(callbackManager,
-            new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    Log.d(TAG, "onAuthStateChanged:Facebook Login sucess");
-                }
-
-                @Override
-                public void onCancel() {
-                    Log.d(TAG, "onAuthStateChanged:Facebook Login Canceled");
-                }
-
-                @Override
-                public void onError(FacebookException exception) {
-                    Log.d(TAG, "onAuthStateChanged:Facebook Login Error");
-                }
-            });
     }
     @Override
     public void onStart() {
@@ -227,7 +207,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void attemptLogin() {
+    private void attemptLoginWithEmail() {
         if (mAuthTask != null) {
             return;
         }
@@ -272,8 +252,9 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
                         if (task.isSuccessful()) {
-                            Log.d(TAG, "attemptLogin: success");
+                            Log.d(TAG, "attemptLoginWithEmail: success");
                             user = mAuth.getCurrentUser();
+                            startMapActivity();
                             //TODO updateUI(user);
                         } else {
                             Log.w(TAG, "signInWithEmail:failed", task.getException());
@@ -295,30 +276,11 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
         }
+    }
 
-        mAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
-
-                    // If sign in fails, display a message to the user. If sign in succeeds
-                    // the auth state listener will be notified and logic to handle the
-                    // signed in user can be handled in the listener.
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "attemptLogin: success");
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        //TODO updateUI(user);
-
-                    } else {
-                        Log.w(TAG, "signInWithEmail:failed", task.getException());
-                        Toast.makeText(LoginActivity.this, R.string.auth_failed,
-                            Toast.LENGTH_SHORT).show();
-                    }
-
-                    // ...
-                }
-            });
+    private void startMapActivity(){
+        Intent intent = new Intent(this, MapActivity.class);
+        startActivity(intent);
     }
 
     private boolean isEmailValid(String email) {
