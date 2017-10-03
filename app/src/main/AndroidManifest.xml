@@ -48,14 +48,13 @@
         <activity android:name=".SignUpActivity">
         </activity>
         <activity
-            android:name=".MapActivity"
-            android:label="@string/title_activity_map"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
-        <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".PerfilActivity"
+            android:label="@string/title_activity_perfil">
         </activity>
     </application>
 

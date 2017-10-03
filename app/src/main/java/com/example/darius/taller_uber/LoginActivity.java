@@ -74,10 +74,6 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private Button login_button;
     private Boolean user_is_logged_in;
 
-//  // ButterKnife example
-//  @BindView(R.id.pe pito)
-//  private Button mPepito;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +124,10 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         };
     }
 
+    /**
+     * load_layout_elements
+     * Carga los elementos de la interfaz y los asocia a un atributo.
+     */
     private void load_layout_elements() {
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         fbLoginButton = (LoginButton) findViewById(R.id.login_button);
@@ -178,7 +178,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                 Log.d(TAG, "facebook:onSuccess:" + loginResult);
                 token = loginResult.getAccessToken();
                 handleFacebookAccessToken(token);
-                startMapActivity();
+                startMainActivity();
             }
             @Override
             public void onCancel() {
@@ -228,7 +228,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
             this.user_is_logged_in = false;
         } else {
             this.user_is_logged_in = true;
-            startMapActivity();
+            startMainActivity();
         }
     }
 
@@ -292,7 +292,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                         if (task.isSuccessful()) {
                             Log.d(TAG, "attemptLoginWithEmail: success");
                             user = mAuth.getCurrentUser();
-                            startMapActivity();
+                            startMainActivity();
                             //TODO updateUI(user);
                         } else {
                             Log.w(TAG, "signInWithEmail:failed", task.getException());
@@ -316,7 +316,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         }
     }
 
-    private void startMapActivity(){
+    private void startMainActivity(){
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
