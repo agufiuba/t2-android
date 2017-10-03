@@ -34,6 +34,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -41,7 +42,9 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -56,8 +59,8 @@ import java.util.List;
  */
 public class LoginActivity extends FragmentActivity implements LoaderCallbacks<Cursor> {
     private static final String TAG = "MainActivity";
-    private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     private UserLoginTask mAuthTask = null;
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
@@ -69,7 +72,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private FirebaseUser user;
     private Button register_button;
     private Button login_button;
-
+    private Boolean user_is_logged_in;
 
 //  // ButterKnife example
 //  @BindView(R.id.pe pito)
@@ -80,11 +83,9 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         callbackManager = CallbackManager.Factory.create();
-
         load_layout_elements();
-
-        configureFaceBookButton(callbackManager, fbLoginButton);
         configureFaceBook();
+        configureFaceBookButton(callbackManager, fbLoginButton);
         configurePasswordField();
         configureSignInButton();
         configureFireBase();
@@ -141,9 +142,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                 startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
             }
         });
-
         login_button = (Button) findViewById(R.id.login_button);
-
     }
 
     @Override
@@ -152,28 +151,8 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void configureFaceBookButton(CallbackManager callbackManager, LoginButton fbLoginButton) {
-        fbLoginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                System.out.println(loginResult.getAccessToken());
-                startMapActivity();
-            }
-
-            @Override
-            public void onCancel() {
-                System.out.println("CANCEL");
-            }
-
-            @Override
-            public void onError(FacebookException e) {
-                System.out.println("ERROR");
-            }
-        });
-    }
-
     private void configureFaceBook(){
-        try {//StackOverflow
+        try {
             PackageInfo info = getPackageManager().getPackageInfo(
                 "com.example.darius.taller_uber",
                 PackageManager.GET_SIGNATURES);
@@ -188,10 +167,69 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
 
         }
     }
+
+    private void configureFaceBookButton(CallbackManager callbackManager,
+                                         LoginButton fbLoginButton) {
+        fbLoginButton.registerCallback(callbackManager,
+            new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                AccessToken token;
+                Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                token = loginResult.getAccessToken();
+                handleFacebookAccessToken(token);
+                startMapActivity();
+            }
+            @Override
+            public void onCancel() {
+                Log.d(TAG, "facebook:onCancel");
+            }
+            @Override
+            public void onError(FacebookException e) {
+                Log.d(TAG, "facebook:onError", e);
+            }
+        });
+    }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+        Log.d(TAG, "handleFacebookAccessToken:" + token);
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        mAuth.signInWithCredential(credential)
+            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()) {
+                        // Actualizar el usuario.
+                        Log.d(TAG, "signInWithCredential:success");
+                        user = mAuth.getCurrentUser();
+                        updateUI(user);
+                    } else {
+                        // Mostrar mensaje en caso de fallo
+                        Log.w(TAG, "signInWithCredential:failure", task.getException());
+                        Toast.makeText(LoginActivity.this, "Authentication failed.",
+                            Toast.LENGTH_SHORT).show();
+                        updateUI(null);
+                    }
+                }
+            });
+    }
+
     @Override
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+        this.user = mAuth.getCurrentUser();
+        updateUI(user);
+    }
+
+    private void updateUI(FirebaseUser user) {
+        if (user != null) {
+            this.user_is_logged_in = false;
+        } else {
+            this.user_is_logged_in = true;
+            startMapActivity();
+        }
     }
 
     @Override
@@ -279,7 +317,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     }
 
     private void startMapActivity(){
-        Intent intent = new Intent(this, MapActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
 
