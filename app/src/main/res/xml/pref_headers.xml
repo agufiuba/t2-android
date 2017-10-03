@@ -3,17 +3,32 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="com.example.darius.taller_uber.PerfilActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_info_black_24dp"
-        android:title="@string/pref_header_general"/>
+        android:fragment="com.example.darius.taller_uber.ProfileActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_person2"
+        android:title="@string/nombre_y_apellido"/>
 
     <header
-        android:fragment="com.example.darius.taller_uber.PerfilActivity$NotificationPreferenceFragment"
+        android:fragment="com.example.darius.taller_uber.ProfileActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_mail"
+        android:title="@string/prompt_email"/>
+
+    <header
+        android:fragment="com.example.darius.taller_uber.ProfileActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/com_facebook_button_icon_blue"
+        android:title="Cuenta de Facebook"/>
+
+    <header
+        android:fragment="com.example.darius.taller_uber.ProfileActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_card"
+        android:title="Modos de Pago"/>
+
+    <header
+        android:fragment="com.example.darius.taller_uber.ProfileActivity$NotificationPreferenceFragment"
         android:icon="@drawable/ic_notifications_black_24dp"
         android:title="@string/pref_header_notifications"/>
 
     <header
-        android:fragment="com.example.darius.taller_uber.PerfilActivity$DataSyncPreferenceFragment"
+        android:fragment="com.example.darius.taller_uber.ProfileActivity$DataSyncPreferenceFragment"
         android:icon="@drawable/ic_sync_black_24dp"
         android:title="@string/pref_header_data_sync"/>
 
