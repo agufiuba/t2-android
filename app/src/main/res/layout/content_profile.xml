@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_marginStart="15dip"
+    android:layout_marginEnd="6dip"
+    android:layout_marginTop="6dip"
+    android:layout_marginBottom="6dip"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.example.darius.taller_uber.ProfileActivity"
+    tools:showIn="@layout/activity_profile">
+
+
+    <TextView
+        android:id="@+id/nombre_edit"
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:maxLines="1"
+        android:textStyle="normal"
+        android:textColor="#000000"
+        android:clickable="true"
+        android:text="Nombre"/>
+
+    <TextView
+        android:id="@+id/nombre_label"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:maxLines="1"
+        android:textStyle="normal"
+        android:clickable="true"
+        android:text="Nombre"/>
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"/>
+
+    <TextView
+        android:id="@+id/apellido_edit"
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:maxLines="1"
+        android:clickable="true"
+        android:textColor="#000000"
+        android:text="Apellido"/>
+
+    <TextView
+        android:id="@+id/apellido_label"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:maxLines="1"
+        android:textStyle="normal"
+        android:clickable="true"
+        android:text="Apellido"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"/>
+
+</LinearLayout>

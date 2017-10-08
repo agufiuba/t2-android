@@ -38,6 +38,7 @@ import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.Profile;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -47,6 +48,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -61,6 +63,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private static final String TAG = "MainActivity";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private FirebaseUser user;
     private UserLoginTask mAuthTask = null;
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
@@ -69,10 +72,10 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private CallbackManager callbackManager;
     private LoginButton fbLoginButton;
     private Button mEmailSignInButton;
-    private FirebaseUser user;
     private Button register_button;
     private Button login_button;
     private Boolean user_is_logged_in;
+    private Profile profile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,27 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         configurePasswordField();
         configureSignInButton();
         configureFireBase();
+    }
+
+    /**
+     * load_layout_elements
+     * Carga los elementos de la interfaz y los asocia a un atributo.
+     */
+    private void load_layout_elements() {
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        fbLoginButton = (LoginButton) findViewById(R.id.login_button);
+        mPasswordView = (EditText) findViewById(R.id.password);
+        mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mLoginFormView = findViewById(R.id.login_form);
+        mProgressView = findViewById(R.id.login_progress);
+        register_button = (Button) findViewById(R.id.register_button);
+        register_button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+            }
+        });
+        login_button = (Button) findViewById(R.id.login_button);
     }
 
     private void configurePasswordField(){
@@ -124,33 +148,6 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         };
     }
 
-    /**
-     * load_layout_elements
-     * Carga los elementos de la interfaz y los asocia a un atributo.
-     */
-    private void load_layout_elements() {
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        fbLoginButton = (LoginButton) findViewById(R.id.login_button);
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-        register_button = (Button) findViewById(R.id.register_button);
-        register_button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
-            }
-        });
-        login_button = (Button) findViewById(R.id.login_button);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
-
     private void configureFaceBook(){
         try {
             PackageInfo info = getPackageManager().getPackageInfo(
@@ -172,26 +169,32 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                                          LoginButton fbLoginButton) {
         fbLoginButton.registerCallback(callbackManager,
             new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                AccessToken token;
-                Log.d(TAG, "facebook:onSuccess:" + loginResult);
-                token = loginResult.getAccessToken();
-                handleFacebookAccessToken(token);
-                startMainActivity();
-            }
-            @Override
-            public void onCancel() {
-                Log.d(TAG, "facebook:onCancel");
-            }
-            @Override
-            public void onError(FacebookException e) {
-                Log.d(TAG, "facebook:onError", e);
-            }
-        });
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    AccessToken token;
+                    Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                    token = loginResult.getAccessToken();
+                    handleFacebookAccessToken(token);
+                    startMainActivity();
+                }
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "facebook:onCancel");
+                }
+                @Override
+                public void onError(FacebookException e) {
+                    Log.d(TAG, "facebook:onError", e);
+                }
+            });
     }
 
-    private void handleFacebookAccessToken(AccessToken token) {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void handleFacebookAccessToken(final AccessToken token) {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
@@ -203,6 +206,11 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                         // Actualizar el usuario.
                         Log.d(TAG, "signInWithCredential:success");
                         user = mAuth.getCurrentUser();
+                        profile = Profile.getCurrentProfile();
+                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                            .setDisplayName(profile.getName())
+                            .build();
+                        user.updateProfile(profileUpdates);
                         updateUI(user);
                     } else {
                         // Mostrar mensaje en caso de fallo
