@@ -119,7 +119,6 @@ public class ProfileActivity extends AppCompatActivity {
             .setDisplayName(new_name)
             .build();
         user.updateProfile(profileUpdates);
-        
     }
 
     private String get_user_first_name(){

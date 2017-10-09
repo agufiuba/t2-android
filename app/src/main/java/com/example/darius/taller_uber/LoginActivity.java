@@ -74,7 +74,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private LoginButton fbLoginButton;
     private Button mEmailSignInButton;
     private Button register_button;
-    private Button login_button;
+    private Button fb_login_button;
     private Boolean user_is_logged_in;
     private Profile profile;
 
@@ -110,7 +110,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                 startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
             }
         });
-        login_button = (Button) findViewById(R.id.login_button);
+        fb_login_button = (Button) findViewById(R.id.login_button);
     }
 
     private void configurePasswordField(){
@@ -326,11 +326,6 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         }
     }
 
-    private void startMainActivity(){
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-    }
-
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
         return email.contains("@");
@@ -339,6 +334,11 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
         return password.length() > 4;
+    }
+
+    private void startMainActivity(){
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
     }
 
     /**

@@ -130,7 +130,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="30dp"
                 android:layout_marginTop="10dp"
-                android:text="@string/confirm"
+                android:text="Confirmar"
                 android:textStyle="bold"/>
         </LinearLayout>
     </ScrollView>
