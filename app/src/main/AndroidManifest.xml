@@ -45,7 +45,9 @@
                 <data android:scheme="@string/fb_login_protocol_scheme"/>
             </intent-filter>
         </activity>
-        <activity android:name=".SignUpActivity">
+        <activity android:name=".PassengerSignUpActivity"
+            android:label="PassengerSignUpActivity"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
             android:name=".MainActivity"
@@ -55,6 +57,16 @@
         <activity
             android:name=".ProfileActivity"
             android:label="@string/title_activity_profile"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".SignUpActivity"
+            android:label="@string/title_activity_sign_up"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".DriverSignUpActivity"
+            android:label="@string/title_activity_driver_sign_up"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
