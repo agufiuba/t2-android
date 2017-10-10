@@ -108,5 +108,7 @@
     <string name="title_activity_profile">ProfileActivity</string>
     <string name="title_activity_sign_up">SignUpActivity</string>
     <string name="title_activity_driver_sign_up">DriverSignUpActivity</string>
+    <string name="title_activity_driver_sign_up2">DriverSignUpActivity2</string>
+    <string name="section_format">Hello World from section: %1$d</string>
 
 </resources>
