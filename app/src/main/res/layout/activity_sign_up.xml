@@ -27,8 +27,7 @@
         android:id="@+id/signup_form"
         android:layout_width="336dp"
         android:layout_height="463dp"
-        tools:layout_editor_absoluteY="8dp"
-        tools:layout_editor_absoluteX="8dp">
+        >
 
         <LinearLayout
             android:id="@+id/signup_login_form"

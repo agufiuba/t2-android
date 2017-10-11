@@ -1,44 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:layout_marginStart="15dip"
-    android:layout_marginEnd="6dip"
-    android:layout_marginTop="6dip"
-    android:layout_marginBottom="6dip"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.example.darius.taller_uber.ProfileActivity"
-    tools:showIn="@layout/activity_profile">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="center_horizontal"
+              android:paddingLeft="@dimen/activity_horizontal_margin"
+              android:paddingRight="@dimen/activity_horizontal_margin"
+              android:orientation="vertical"
+              app:layout_behavior="@string/appbar_scrolling_view_behavior"
+              tools:context="com.example.darius.taller_uber.ProfileActivity"
+              tools:showIn="@layout/activity_profile">
 
 
     <TextView
         android:id="@+id/nombre_edit"
-        android:layout_margin="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:clickable="true"
         android:ellipsize="marquee"
         android:fadingEdge="horizontal"
         android:maxLines="1"
-        android:textStyle="normal"
+        android:text="Nombre"
         android:textColor="#000000"
-        android:clickable="true"
-        android:text="Nombre"/>
+        android:textStyle="normal"/>
 
     <TextView
         android:id="@+id/nombre_label"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="20dp"
+        android:clickable="true"
         android:ellipsize="marquee"
         android:fadingEdge="horizontal"
         android:maxLines="1"
-        android:textStyle="normal"
-        android:clickable="true"
-        android:text="Nombre"/>
+        android:text="Nombre"
+        android:textStyle="normal"/>
 
 
     <View
@@ -48,28 +47,29 @@
 
     <TextView
         android:id="@+id/apellido_edit"
-        android:layout_margin="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:clickable="true"
         android:ellipsize="marquee"
         android:fadingEdge="horizontal"
         android:maxLines="1"
-        android:clickable="true"
-        android:textColor="#000000"
-        android:text="Apellido"/>
+        android:text="Apellido"
+        android:textColor="#000000"/>
 
     <TextView
         android:id="@+id/apellido_label"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="20dp"
+        android:clickable="true"
         android:ellipsize="marquee"
         android:fadingEdge="horizontal"
         android:maxLines="1"
-        android:textStyle="normal"
-        android:clickable="true"
-        android:text="Apellido"/>
+        android:text="Apellido"
+        android:textStyle="normal"/>
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"

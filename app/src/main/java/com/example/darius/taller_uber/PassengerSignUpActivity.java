@@ -112,7 +112,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
                 .build();
             user.updateProfile(profileUpdates);
             //TODO cambiar la actividad
-            startActivity(new Intent(PassengerSignUpActivity.this, MainActivity.class));
+            startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
         }
     }
 
