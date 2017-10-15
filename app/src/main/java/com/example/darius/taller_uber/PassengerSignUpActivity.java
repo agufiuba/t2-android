@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -29,6 +31,8 @@ public class PassengerSignUpActivity extends AppCompatActivity {
     private Button confirmar;
     private FirebaseUser user;
     private FirebaseAuth mAuth;
+    private RequestQueue queue;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_passenger_sign_up);
         load_layout_elements();
         configure_layout_elements();
+        queue = Volley.newRequestQueue(this);
     }
 
     /**

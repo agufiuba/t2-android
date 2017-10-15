@@ -1,25 +1,18 @@
 package com.example.darius.taller_uber;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
+import android.app.LoaderManager.LoaderCallbacks;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentActivity;
-import android.app.LoaderManager.LoaderCallbacks;
-
-import android.content.CursorLoader;
-import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -35,6 +28,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -51,17 +51,22 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends FragmentActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
     private static final String TAG = "MainActivity";
+    private String url = "http://192.168.1.12:3000/user";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
@@ -112,7 +117,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         fb_login_button = (Button) findViewById(R.id.login_button);
     }
 
-    private void configurePasswordField(){
+    private void configurePasswordField() {
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -125,7 +130,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         });
     }
 
-    private void configureSignInButton(){
+    private void configureSignInButton() {
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -149,7 +154,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         };
     }
 
-    private void configureFaceBook(){
+    private void configureFaceBook() {
         try {
             PackageInfo info = getPackageManager().getPackageInfo(
                 "com.example.darius.taller_uber",
@@ -168,6 +173,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
 
     private void configureFaceBookButton(CallbackManager callbackManager,
                                          LoginButton fbLoginButton) {
+        fbLoginButton.setReadPermissions(Arrays.asList("public_profile", "email"));
         fbLoginButton.registerCallback(callbackManager,
             new FacebookCallback<LoginResult>() {
                 @Override
@@ -178,10 +184,12 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                     handleFacebookAccessToken(token);
                     startMainActivity();
                 }
+
                 @Override
                 public void onCancel() {
                     Log.d(TAG, "facebook:onCancel");
                 }
+
                 @Override
                 public void onError(FacebookException e) {
                     Log.d(TAG, "facebook:onError", e);
@@ -212,7 +220,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                             .setDisplayName(profile.getName())
                             .build();
                         user.updateProfile(profileUpdates);
-                        updateUI(user);
+                        attempt_loginwith_appserver_using_fb(token);
                     } else {
                         // Mostrar mensaje en caso de fallo
                         Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -297,7 +305,8 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
                         if (task.isSuccessful()) {
                             Log.d(TAG, "attemptLoginWithEmail: success");
                             user = mAuth.getCurrentUser();
-                            startMainActivity();
+                            attempt_loginwith_appserver(user);
+                            //startMainActivity();
                             //TODO updateUI(user);
                         } else {
                             Log.w(TAG, "signInWithEmail:failed", task.getException());
@@ -315,6 +324,64 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         }
     }
 
+    private void attempt_loginwith_appserver(FirebaseUser user) {
+        try {
+            RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
+
+            final JSONObject params = new JSONObject();
+
+            params.put("token", user.getIdToken(true).toString());
+            params.put("email", user.getEmail());
+
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        VolleyLog.v("Response:%n %s", response);
+                        if (response.toString() == "200")
+                            startMainActivity();
+                    }
+                }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    VolleyLog.e("Error: ", error.getMessage());
+                }
+            });
+            queue.add(jsonObjectRequest);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void attempt_loginwith_appserver_using_fb(AccessToken token) {
+        try {
+            RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
+
+            final JSONObject params = new JSONObject();
+
+            params.put("token", token.getToken());
+            params.put("user_id", token.getUserId());
+
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        VolleyLog.v("Response:%n %s", response);
+                        if (response.toString() == "200")
+                            updateUI(user);
+                    }
+                }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    VolleyLog.e("Error: ", error.getMessage());
+                }
+            });
+            queue.add(jsonObjectRequest);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
         return email.contains("@");
@@ -325,7 +392,7 @@ public class LoginActivity extends FragmentActivity implements LoaderCallbacks<C
         return password.length() > 4;
     }
 
-    private void startMainActivity(){
+    private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
