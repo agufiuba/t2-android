@@ -207,6 +207,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         Log.d(TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+
         mAuth.signInWithCredential(credential)
             .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
@@ -220,7 +221,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             .setDisplayName(profile.getName())
                             .build();
                         user.updateProfile(profileUpdates);
-                        attempt_loginwith_appserver_using_fb(token);
+                        startMainActivity();
+//                        attempt_loginwith_appserver(user);
                     } else {
                         // Mostrar mensaje en caso de fallo
                         Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -241,7 +243,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void updateUI(FirebaseUser user) {
-        if (user != null) {
+        if (user == null) {
             this.user_is_logged_in = false;
         } else {
             this.user_is_logged_in = true;
@@ -306,8 +308,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             Log.d(TAG, "attemptLoginWithEmail: success");
                             user = mAuth.getCurrentUser();
                             attempt_loginwith_appserver(user);
-                            //startMainActivity();
-                            //TODO updateUI(user);
                         } else {
                             Log.w(TAG, "signInWithEmail:failed", task.getException());
                             Toast.makeText(LoginActivity.this, R.string.auth_failed,
@@ -353,34 +353,40 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    private void attempt_loginwith_appserver_using_fb(AccessToken token) {
-        try {
-            RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
-
-            final JSONObject params = new JSONObject();
-
-            params.put("token", token.getToken());
-            params.put("user_id", token.getUserId());
-
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        VolleyLog.v("Response:%n %s", response);
-                        if (response.toString() == "200")
-                            updateUI(user);
-                    }
-                }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    VolleyLog.e("Error: ", error.getMessage());
-                }
-            });
-            queue.add(jsonObjectRequest);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
+//    /**
+//     * Intenta loguearse con al appserver usando facebook.
+//     * Si el usuario ya está registrado en el app server pasa a la actividad
+//     * principal, y en caso de no estarlo pasa a la pantalla de registrarse.
+//     * @param token: token devuelto por la api de Facebook
+//     */
+//    private void attempt_loginwith_appserver_using_fb(AccessToken token) {
+//        try {
+//            RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
+//
+//            final JSONObject params = new JSONObject();
+//
+//            params.put("token", token.getToken());
+//            params.put("user_id", token.getUserId());
+//
+//            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
+//                new Response.Listener<JSONObject>() {
+//                    @Override
+//                    public void onResponse(JSONObject response) {
+//                        VolleyLog.v("Response:%n %s", response);
+//                        if (response.toString() == "200")
+//                            updateUI(user);
+//                    }
+//                }, new Response.ErrorListener() {
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//                    VolleyLog.e("Error: ", error.getMessage());
+//                }
+//            });
+//            queue.add(jsonObjectRequest);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
@@ -394,6 +400,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
+        user_is_logged_in = true;
+        intent.putExtra("user_is_logged_in", user_is_logged_in);
         startActivity(intent);
     }
 

@@ -36,6 +36,8 @@ public class DriverSignUpActivity extends AppCompatActivity {
 
     View focusView = null;
 
+    String url = "http://192.168.1.12:3000/user";
+
     private FirebaseUser user;
     private FirebaseAuth mAuth;
     final CharSequence[] modelos = {"Ford Fiesta", "Chevrolet S10",
@@ -406,13 +408,13 @@ public class DriverSignUpActivity extends AppCompatActivity {
     private void sendSignUpRequest() {
         try {
             focusView = email;
-            String url = "http://192.168.1.12:3000/user";
             final JSONObject driver_json = new JSONObject();
             final JSONObject car_json = new JSONObject();
             driver_json.put("type","driver");
             driver_json.put("name",nombre.getText().toString());
             driver_json.put("last_name",apellido.getText().toString());
-            driver_json.put("email",email.getText().toString());
+            driver_json.put("id",email.getText().toString());
+            driver_json.put("facebook_acount","Darius Maitia");
             car_json.put("model",modelo.toString());
             car_json.put("color",color.toString());
             car_json.put("patent",patente);

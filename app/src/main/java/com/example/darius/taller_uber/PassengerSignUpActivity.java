@@ -13,7 +13,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -21,6 +25,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class PassengerSignUpActivity extends AppCompatActivity {
 
@@ -32,7 +39,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
     private FirebaseUser user;
     private FirebaseAuth mAuth;
     private RequestQueue queue;
-
+    String url = "http://192.168.1.12:3000/user";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,10 +124,41 @@ public class PassengerSignUpActivity extends AppCompatActivity {
                 .build();
             user.updateProfile(profileUpdates);
             //TODO cambiar la actividad
-            startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
+            //startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
+            sendSignUpRequest();
         }
     }
 
+    private void sendSignUpRequest() {
+        try {
+            View focusView = email;
+            final JSONObject driver_json = new JSONObject();
+            final JSONObject car_json = new JSONObject();
+            driver_json.put("type","passenger");
+            driver_json.put("name",nombre.getText().toString());
+            driver_json.put("last_name",apellido.getText().toString());
+            driver_json.put("id",email.getText().toString());
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, driver_json,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.e("Respuesta: ", response.toString());
+                        if (response.toString() == "POST user OK"){
+                            startActivity(new Intent(PassengerSignUpActivity.this, MainActivity.class));
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("Error: ", error.getMessage());
+                }
+            });
+            queue.add(postRequest);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
     private boolean isEmailValid(String email) {
         return email.contains("@");
     }
