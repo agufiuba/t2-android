@@ -40,6 +40,7 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.Profile;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -91,6 +92,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         load_layout_elements();
         configureFaceBook();
         configureFaceBookButton(callbackManager, fbLoginButton);
+        LoginManager.getInstance().logOut();
         configurePasswordField();
         configureSignInButton();
         configureFireBase();
@@ -108,6 +110,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
         register_button = (Button) findViewById(R.id.register_button);
+
         register_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -223,6 +226,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         user.updateProfile(profileUpdates);
                         startMainActivity();
 //                        attempt_loginwith_appserver(user);
+                        /*
+                        Acá la logica seria preguntarle al servidor si el usuario esta registrado
+                        En caso de no estarlo, mandarlo a la pantalla de registro
+                        En caso de estarlo, iniciar la pantalla principal
+                         */
+
                     } else {
                         // Mostrar mensaje en caso de fallo
                         Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -400,6 +409,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
+//        Intent intent = new Intent(this, PassengerSignUpActivity.class);
         user_is_logged_in = true;
         intent.putExtra("user_is_logged_in", user_is_logged_in);
         startActivity(intent);

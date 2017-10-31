@@ -1,17 +1,14 @@
 package com.example.darius.taller_uber;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -19,9 +16,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -47,7 +41,10 @@ public class PassengerSignUpActivity extends AppCompatActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_passenger_sign_up);
         load_layout_elements();
+        mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
         configure_layout_elements();
+        load_registration_through_facebook();
         queue = Volley.newRequestQueue(this);
     }
 
@@ -55,7 +52,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
      * load_layout_elements
      * Carga los elementos de la interfaz y los asocia a un atributo.
      */
-    private void load_layout_elements(){
+    private void load_layout_elements() {
         email = (EditText) findViewById(R.id.email);
         nombre = (EditText) findViewById(R.id.nombre);
         apellido = (EditText) findViewById(R.id.apellido);
@@ -63,13 +60,30 @@ public class PassengerSignUpActivity extends AppCompatActivity {
         confirmar = (Button) findViewById(R.id.confirm_signup_button);
     }
 
-    private void configure_layout_elements(){
+    private void configure_layout_elements() {
         confirmar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 attemptRegister();
             }
         });
+    }
+
+    /**
+     * Fija los valores de email, nombre y apellido extraidos de facebook.
+     * La unica instancia en la que user es distinto de null en esta actividad
+     * es cuando el usuario ingresó mediante facebook.
+     */
+    private void load_registration_through_facebook() {
+        if (user != null){
+            email.setText(user.getEmail());
+            email.setClickable(false);
+            nombre.setText(get_user_first_name());
+            nombre.setClickable(false);
+            apellido.setText(get_user_last_name());
+            apellido.setClickable(false);
+            password.setVisibility(View.INVISIBLE);
+        }
     }
 
     /**
@@ -113,8 +127,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
             focusView.requestFocus();
         }
 
-        if(!cancel){
-            mAuth = FirebaseAuth.getInstance();
+        if (!cancel) {
             mAuth.createUserWithEmailAndPassword(_email, _password);
             mAuth.signInWithEmailAndPassword(_email, _password);
             user = mAuth.getCurrentUser();
@@ -134,17 +147,17 @@ public class PassengerSignUpActivity extends AppCompatActivity {
             View focusView = email;
             final JSONObject driver_json = new JSONObject();
             final JSONObject car_json = new JSONObject();
-            driver_json.put("type","passenger");
-            driver_json.put("name",nombre.getText().toString());
-            driver_json.put("last_name",apellido.getText().toString());
-            driver_json.put("id",email.getText().toString());
+            driver_json.put("type", "passenger");
+            driver_json.put("name", nombre.getText().toString());
+            driver_json.put("last_name", apellido.getText().toString());
+            driver_json.put("id", email.getText().toString());
 
             JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, driver_json,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.e("Respuesta: ", response.toString());
-                        if (response.toString() == "POST user OK"){
+                        if (response.toString() == "POST user OK") {
                             startActivity(new Intent(PassengerSignUpActivity.this, MainActivity.class));
                         }
                     }
@@ -159,6 +172,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
     private boolean isEmailValid(String email) {
         return email.contains("@");
     }
@@ -167,4 +181,21 @@ public class PassengerSignUpActivity extends AppCompatActivity {
         return password.length() > 4;
     }
 
+    private String get_user_first_name() {
+        String name;
+        int i;
+
+        name = user.getDisplayName();
+        i = name.indexOf(" ");
+        return name.substring(i + 1, name.length());
+    }
+
+    private String get_user_last_name() {
+        String name;
+        int i;
+
+        name = user.getDisplayName();
+        i = name.indexOf(" ");
+        return name.substring(0, i);
+    }
 }
