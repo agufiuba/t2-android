@@ -1,8 +1,11 @@
 package com.example.darius.taller_uber;
 
 import android.content.Intent;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -12,7 +15,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -46,6 +55,11 @@ public class MainActivity extends AppCompatActivity
     private GoogleMap mMap;
     private Marker originMarker;
     private Marker destinationMarker;
+    private FloatingActionButton requestTravelfab;
+    private FloatingActionButton nextfab;
+    private CardView search_card_view;
+
+    PlaceAutocompleteFragment autocompleteFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,13 +68,22 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        requestTravelfab = (FloatingActionButton) findViewById(R.id.fab);
+        requestTravelfab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startEstado1();
             }
         });
+        nextfab = (FloatingActionButton) findViewById(R.id.next_fab);
+        nextfab.setVisibility(View.INVISIBLE);
+
+        search_card_view = (CardView) findViewById(R.id.search_card_view);
+        search_card_view.setVisibility(View.INVISIBLE);
+
+        autocompleteFragment = (PlaceAutocompleteFragment)
+            getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        configureAutocompleteFragment();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -85,15 +108,29 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void configureAutocompleteFragment(){
+        final String TAG = "AutoCompleteFragment";
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                Log.i(TAG, "Place: " + place.getName());
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Me posiciono sobre Buenos Aires
         LatLng bsas = new LatLng(-34.599722, -58.381944);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas,12));
-//      ejemplo de añadido de marcador:
-//      mMap.addMarker(new MarkerOptions().position(bsas).title("Marker in Sydney"));
-//      TODO: borrar comentario
     }
 
     @Override
@@ -145,16 +182,26 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * startEstado1
-     * Se inicia cuando el usuario presiona el boton fab de solicitud de un
-     * nuevo viaje.
-     * Estado 1: el usuario indica la posición de recogida. Esta posición puede ser
-     * indicada mediante el ingreso de la dirección en campo de ingreso de texto que surgirá.
-     * También puede droppear un pin sobre una posicion en el mapa.
-     * También puede apretar un botón que dropea el pin en la posicion actual del usuario.
+     * startEstado0
+     * Estado 0: la aplicación muestra el mapa de buenos aires con un botón de inicio
+     * al Estado 1.
+     */
+    private void startEstado0(){
+        initializeMarker(originMarker);
+    }
+
+    /**
+     * startEstado0
+     * la aplicación muestra el mapa de buenos aires con un botón de inicio
+     * al Estado 1
      */
     private void startEstado1(){
         initializeMarker(originMarker);
+        requestTravelfab.setVisibility(View.INVISIBLE);
+        nextfab.setVisibility(View.VISIBLE);
+        Animation slide_left = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_left);
+        search_card_view.setAnimation(slide_left);
+        search_card_view.setVisibility(View.VISIBLE);
     }
 
     /**
