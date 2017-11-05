@@ -28,6 +28,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -44,22 +45,25 @@ import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -67,7 +71,7 @@ import java.util.List;
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
     private static final String TAG = "MainActivity";
-    private String url = "http://192.168.1.12:3000/user";
+    private String url = "http://192.168.43.137:3000/login";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
@@ -333,18 +337,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    private void prueba(){
+    private void prueba() {
         RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
 
         final JSONObject params = new JSONObject();
-        String url2 = "http://url:4000/ht";
+        String url2 = "http://192.168.43.137:3000/ht";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url2, params,
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     VolleyLog.v("Response:%n %s", response);
-                    if (response.toString() == "200"){
+                    if (response.toString() == "200") {
                         System.out.println("Prueba ok");
                     }
                 }
@@ -358,38 +362,52 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     }
 
-    private void attempt_loginwith_appserver(FirebaseUser user) {
-        try {
-            RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
-            prueba();
-            final JSONObject params = new JSONObject();
-            params.put("token", user.getIdToken(true).toString());
+    private void post_user_token(final String token){
+        RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
 
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        VolleyLog.v("Response:%n %s", response);
-                        if (response.toString() == "200"){
-                            startMainActivity();
-                        } else {
-                            if (response.toString() == "400"){
-                                startRegisterActivity();
-                            } else {
-                                System.out.println("nanana");
-                            }
-                        }
-                    }
-                }, new Response.ErrorListener() {
+        final JSONObject params = new JSONObject();
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
+            new Response.Listener<JSONObject>() {
                 @Override
-                public void onErrorResponse(VolleyError error) {
-                    VolleyLog.e("Error: ", error.getMessage());
+                public void onResponse(JSONObject response) {
+                    VolleyLog.v("Response:%n %s", response);
+                    if (response.toString() == "200") {
+                        startMainActivity();
+                    }
+                    if (response.toString() == "400") {
+                        startRegisterActivity();
+                    }
+
                 }
-            });
-            queue.add(jsonObjectRequest);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        }) {
+            /**
+             * Request headers
+             */
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Authorization",token);
+                return headers;
+            }
+        };
+        queue.add(jsonObjectRequest);
+    }
+
+    private void attempt_loginwith_appserver(final FirebaseUser user) {
+        user.getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+            @Override
+            public void onSuccess(GetTokenResult result) {
+                String idToken = result.getToken();
+                post_user_token(idToken);
+                Log.d(TAG, "GetTokenResult result = " + idToken);
+            }
+        });
     }
 
 
@@ -408,7 +426,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         startActivity(intent);
     }
 
-    private void startRegisterActivity(){
+    private void startRegisterActivity() {
         Intent intent = new Intent(this, SignUpActivity.class);
         startActivity(intent);
     }
