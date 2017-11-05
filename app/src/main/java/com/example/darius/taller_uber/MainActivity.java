@@ -1,6 +1,7 @@
 package com.example.darius.taller_uber;
 
 import android.content.Intent;
+import android.location.Geocoder;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -59,7 +60,8 @@ public class MainActivity extends AppCompatActivity
     private FloatingActionButton nextfab;
     private CardView search_card_view;
 
-    PlaceAutocompleteFragment autocompleteFragment;
+    PlaceAutocompleteFragment   autocompleteFragment;
+    Place place;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +85,6 @@ public class MainActivity extends AppCompatActivity
 
         autocompleteFragment = (PlaceAutocompleteFragment)
             getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-        configureAutocompleteFragment();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -109,20 +110,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void configureAutocompleteFragment(){
-        final String TAG = "AutoCompleteFragment";
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
-                Log.i(TAG, "Place: " + place.getName());
-            }
+        switch (estado) {
+            case ESTADO1:
+                autocompleteFragment.setOnPlaceSelectedListener( new PlaceSelection(originMarker));
+                break;
+            case ESTADO2:
+                autocompleteFragment.setOnPlaceSelectedListener( new PlaceSelection(destinationMarker));
+                break;
+        }
+    }
 
-            @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.
-                Log.i(TAG, "An error occurred: " + status);
-            }
-        });
+    private void setMarker(){
+        switch (estado){
+            case ESTADO1:
+                originMarker.setPosition(place.getLatLng());
+                break;
+            case ESTADO2:
+                destinationMarker.setPosition(place.getLatLng());
+                break;
+        }
     }
 
     @Override
@@ -182,41 +188,40 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * startEstado0
-     * Estado 0: la aplicación muestra el mapa de buenos aires con un botón de inicio
-     * al Estado 1.
-     */
-    private void startEstado0(){
-        initializeMarker(originMarker);
-    }
-
-    /**
-     * startEstado0
-     * la aplicación muestra el mapa de buenos aires con un botón de inicio
-     * al Estado 1
+     * startEstado1
+     * Estado 1: el usuario indica la posición de recogida. Esta posición puede ser
+     * indicada mediante el ingreso de la dirección en campo de ingreso de texto que surgirá.
+     * También puede droppear un pin sobre una posicion en el mapa.
+     * También puede apretar un botón que dropea el pin en la posicion actual del usuario.
      */
     private void startEstado1(){
-        initializeMarker(originMarker);
+        estado = Estados.ESTADO1;
+        originMarker = mMap.addMarker(new MarkerOptions()
+            .position(mMap.getCameraPosition().target)
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+        originMarker.setDraggable(true);
+        configureAutocompleteFragment();
         requestTravelfab.setVisibility(View.INVISIBLE);
         nextfab.setVisibility(View.VISIBLE);
+        nextfab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startEstado2();
+            }
+        });
         Animation slide_left = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_left);
         search_card_view.setAnimation(slide_left);
         search_card_view.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * initializeOriginMarker
-     * Incializa el marcador/pin en el mapa.
-     * Permite ubicar una posición de origen o destino del trayecto.
-     * Se inicializa en el centro de la porción visible de mapa.
-     * Es draggable.
-     */
-    private void initializeMarker(Marker marker){
-
-        marker = mMap.addMarker(new MarkerOptions()
+    public void startEstado2(){
+        estado = Estados.ESTADO2;
+        originMarker.setDraggable(false);
+        destinationMarker = mMap.addMarker(new MarkerOptions()
             .position(mMap.getCameraPosition().target)
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
-        marker.setDraggable(true);
-
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
+        destinationMarker.setDraggable(true);
+        autocompleteFragment.setText("");
+        configureAutocompleteFragment();
     }
 }
