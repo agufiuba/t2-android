@@ -185,7 +185,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     Log.d(TAG, "facebook:onSuccess:" + loginResult);
                     token = loginResult.getAccessToken();
                     handleFacebookAccessToken(token);
-                    startMainActivity();
+//                    startMainActivity();
                 }
 
                 @Override
@@ -224,8 +224,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             .setDisplayName(profile.getName())
                             .build();
                         user.updateProfile(profileUpdates);
-                        startMainActivity();
-//                        attempt_loginwith_appserver(user);
+//                        startMainActivity();
+                        attempt_loginwith_appserver(user);
                         /*
                         Acá la logica seria preguntarle al servidor si el usuario esta registrado
                         En caso de no estarlo, mandarlo a la pantalla de registro
@@ -333,22 +333,52 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
+    private void prueba(){
+        RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
+
+        final JSONObject params = new JSONObject();
+        String url2 = "http://url:4000/ht";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url2, params,
+            new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    VolleyLog.v("Response:%n %s", response);
+                    if (response.toString() == "200"){
+                        System.out.println("Prueba ok");
+                    }
+                }
+            }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+        queue.add(jsonObjectRequest);
+
+    }
+
     private void attempt_loginwith_appserver(FirebaseUser user) {
         try {
             RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
-
+            prueba();
             final JSONObject params = new JSONObject();
-
             params.put("token", user.getIdToken(true).toString());
-            params.put("email", user.getEmail());
 
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         VolleyLog.v("Response:%n %s", response);
-                        if (response.toString() == "200")
+                        if (response.toString() == "200"){
                             startMainActivity();
+                        } else {
+                            if (response.toString() == "400"){
+                                startRegisterActivity();
+                            } else {
+                                System.out.println("nanana");
+                            }
+                        }
                     }
                 }, new Response.ErrorListener() {
                 @Override
@@ -362,40 +392,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-//    /**
-//     * Intenta loguearse con al appserver usando facebook.
-//     * Si el usuario ya está registrado en el app server pasa a la actividad
-//     * principal, y en caso de no estarlo pasa a la pantalla de registrarse.
-//     * @param token: token devuelto por la api de Facebook
-//     */
-//    private void attempt_loginwith_appserver_using_fb(AccessToken token) {
-//        try {
-//            RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
-//
-//            final JSONObject params = new JSONObject();
-//
-//            params.put("token", token.getToken());
-//            params.put("user_id", token.getUserId());
-//
-//            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
-//                new Response.Listener<JSONObject>() {
-//                    @Override
-//                    public void onResponse(JSONObject response) {
-//                        VolleyLog.v("Response:%n %s", response);
-//                        if (response.toString() == "200")
-//                            updateUI(user);
-//                    }
-//                }, new Response.ErrorListener() {
-//                @Override
-//                public void onErrorResponse(VolleyError error) {
-//                    VolleyLog.e("Error: ", error.getMessage());
-//                }
-//            });
-//            queue.add(jsonObjectRequest);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
@@ -409,9 +405,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
-//        Intent intent = new Intent(this, PassengerSignUpActivity.class);
-        user_is_logged_in = true;
-        intent.putExtra("user_is_logged_in", user_is_logged_in);
+        startActivity(intent);
+    }
+
+    private void startRegisterActivity(){
+        Intent intent = new Intent(this, SignUpActivity.class);
         startActivity(intent);
     }
 
