@@ -41,13 +41,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="30dp"
                 android:src="@drawable/logo_huver"/>
-
-            <!--<CheckBox-->
-            <!--android:id="@+id/CheckBoxResponse"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="CheckBox"-->
-            <!--android:layout_width="fill_parent">-->
-            <!--</CheckBox>-->
+            
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

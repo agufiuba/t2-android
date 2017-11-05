@@ -71,19 +71,15 @@ public class PassengerSignUpActivity extends AppCompatActivity {
 
     /**
      * Fija los valores de email, nombre y apellido extraidos de facebook.
-     * La unica instancia en la que user es distinto de null en esta actividad
-     * es cuando el usuario ingresó mediante facebook.
      */
     private void load_registration_through_facebook() {
-        if (user != null){
-            email.setText(user.getEmail());
-            email.setClickable(false);
-            nombre.setText(get_user_first_name());
-            nombre.setClickable(false);
-            apellido.setText(get_user_last_name());
-            apellido.setClickable(false);
-            password.setVisibility(View.INVISIBLE);
-        }
+        email.setText(user.getEmail());
+        email.setClickable(false);
+        nombre.setText(get_user_first_name());
+        nombre.setClickable(false);
+        apellido.setText(get_user_last_name());
+        apellido.setClickable(false);
+        password.setVisibility(View.INVISIBLE);
     }
 
     /**

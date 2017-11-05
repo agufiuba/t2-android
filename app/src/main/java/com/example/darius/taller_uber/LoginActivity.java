@@ -84,7 +84,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private Button mEmailSignInButton;
     private Button register_button;
     private Button fb_login_button;
-    private Boolean user_is_logged_in;
+    private Boolean user_is_logged_in = false;
     private Profile profile;
 
     @Override
@@ -256,19 +256,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void updateUI(FirebaseUser user) {
-        if (user == null) {
-            this.user_is_logged_in = false;
-        } else {
-            this.user_is_logged_in = true;
+        if (user != null && user_is_logged_in){
             startMainActivity();
-        }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
         }
     }
 
@@ -337,33 +326,44 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    private void prueba() {
-        RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
-
-        final JSONObject params = new JSONObject();
-        String url2 = "http://192.168.43.137:3000/ht";
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url2, params,
-            new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    VolleyLog.v("Response:%n %s", response);
-                    if (response.toString() == "200") {
-                        System.out.println("Prueba ok");
-                    }
-                }
-            }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.e("Error: ", error.getMessage());
-            }
-        });
-        queue.add(jsonObjectRequest);
-
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
     }
 
+    /**
+     * attempt_loginwith_appserver
+     * Intenta loguearse al con el app server (diferente del loguin con
+     * firebase) enviándole el token del usuario de firebase y verificando
+     * si el usuario efectivamente está registrado en el app server.
+     * PRE: El usuario ya está conectado en firebase.
+     * POST: En caso de estar registrado se inicia la pantalla principal
+     * o en caso contrario de inicia la pantalla de registro.
+     * @param user: user de Firebase
+     */
+    private void attempt_loginwith_appserver(final FirebaseUser user) {
+        user.getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+            @Override
+            public void onSuccess(GetTokenResult result) {
+                String idToken = result.getToken();
+                post_user_token(idToken);
+                Log.d(TAG, "GetTokenResult result = " + idToken);
+            }
+        });
+    }
+
+    /**
+     * post_user_token
+     * Envía al appserver el token de usuario de firebase.
+     * Inicia la pantalla de registro si se recibe un codigo 400
+     * o inicia la pantalla principal si el codigo recibido es 200.
+     * @param token: token de usuario de firebase
+     */
     private void post_user_token(final String token){
-        RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         final JSONObject params = new JSONObject();
 
@@ -372,18 +372,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void onResponse(JSONObject response) {
                     VolleyLog.v("Response:%n %s", response);
-                    if (response.toString() == "200") {
-                        startMainActivity();
+                    switch (response.toString()){
+                        case "200": {
+                            user_is_logged_in = true;
+                            startMainActivity();
+                            break;
+                        }
                     }
-                    if (response.toString() == "400") {
-                        startRegisterActivity();
-                    }
-
                 }
             }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 VolleyLog.e("Error: ", error.getMessage());
+                user_is_logged_in = false;
+                startRegisterActivity();
             }
         }) {
             /**
@@ -398,18 +400,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         };
         queue.add(jsonObjectRequest);
     }
-
-    private void attempt_loginwith_appserver(final FirebaseUser user) {
-        user.getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
-            @Override
-            public void onSuccess(GetTokenResult result) {
-                String idToken = result.getToken();
-                post_user_token(idToken);
-                Log.d(TAG, "GetTokenResult result = " + idToken);
-            }
-        });
-    }
-
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
