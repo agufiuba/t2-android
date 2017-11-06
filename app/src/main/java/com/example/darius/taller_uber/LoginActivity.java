@@ -325,7 +325,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-<<<<<<< HEAD
     @Override
     public void onStop() {
         super.onStop();
@@ -354,8 +353,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
     }
-=======
->>>>>>> FCM
+
 
     /**
      * post_user_token
@@ -374,18 +372,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void onResponse(JSONObject response) {
                     VolleyLog.v("Response:%n %s", response);
-<<<<<<< HEAD
-                    switch (response.toString()){
-                        case "200": {
-                            user_is_logged_in = true;
-                            startMainActivity();
-                            break;
-                        }
-                    }
-=======
                     user_is_logged_in = true;
                     startMainActivity();
->>>>>>> FCM
                 }
             }, new Response.ErrorListener() {
             @Override

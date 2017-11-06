@@ -74,27 +74,73 @@
                     android:layout_height="wrap_content"/>
             </LinearLayout>
 
-            <LinearLayout
+            <GridLayout
                 android:id="@+id/input_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:visibility="gone"
                 android:paddingLeft="@dimen/activity_horizontal_margin">
 
-                <TextView
+                <LinearLayout
+                    android:layout_width="match_parent">
+
+                    <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Numero: "
+                    android:layout_weight="0"
                     android:textColor="#000000"
                     android:textStyle="normal"/>
-                <EditText
-                    android:id="@+id/input_code"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lines= "1"/>
 
-            </LinearLayout>
+                    <EditText
+                        android:id="@+id/input_code"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:lines="1"/></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent">
+                    <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Exp Month: "
+                    android:textColor="#000000"
+                    android:textStyle="normal"/>
+                    <EditText
+                        android:id="@+id/expiration_month"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lines= "1"/></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"><TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Exp Year: "
+                    android:textColor="#000000"
+                    android:textStyle="normal"/>
+                    <EditText
+                        android:id="@+id/expiration_year"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lines= "1"/></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"><TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CCVV: "
+                    android:textColor="#000000"
+                    android:textStyle="normal"/>
+                    <EditText
+                        android:id="@+id/ccvv"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lines= "1"/></LinearLayout>
+
+            </GridLayout>
 
             <Button
                 style="?android:textAppearanceSmall"
@@ -108,19 +154,19 @@
                 android:text="Aceptar"
                 android:textStyle="bold"/>
 
-            <Button
-                style="?android:textAppearanceSmall"
-                android:id="@+id/omitir"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="400dp"
-                android:textAlignment="center"
-                android:includeFontPadding="true"
-                android:elevation="0dp"
-                android:text="No gracias,\n (le haré un pete al conductor)"
-                android:lines="2"
-                android:textStyle="bold"/>
+            <!--<Button-->
+                <!--style="?android:textAppearanceSmall"-->
+                <!--android:id="@+id/omitir"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_marginTop="10dp"-->
+                <!--android:layout_marginBottom="400dp"-->
+                <!--android:textAlignment="center"-->
+                <!--android:includeFontPadding="true"-->
+                <!--android:elevation="0dp"-->
+                <!--android:text="No gracias,\n (le haré un pete al conductor)"-->
+                <!--android:lines="2"-->
+                <!--android:textStyle="bold"/>-->
 
         </LinearLayout>
 

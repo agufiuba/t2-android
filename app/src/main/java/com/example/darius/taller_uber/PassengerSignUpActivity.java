@@ -143,9 +143,19 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
                 user.updateProfile(profileUpdates);
                 //TODO cambiar la actividad
                 //startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
-                sendSignUpRequest();
+                //sendSignUpRequest();
+                goToPaymentActivity();
             }
         }
+    }
+
+    private void goToPaymentActivity(){
+        Intent intent = new Intent(PassengerSignUpActivity.this, PaymentActivity.class);
+        intent.putExtra("type", "passenger");
+        intent.putExtra("name", nombre.getText().toString());
+        intent.putExtra("last_name", apellido.getText().toString());
+        intent.putExtra("mail", email.getText().toString());
+        startActivity(intent);
     }
 
     private void sendSignUpRequest() {
