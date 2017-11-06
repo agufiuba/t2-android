@@ -69,9 +69,8 @@ import java.util.Map;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor>, URL_local {
     private static final String TAG = "MainActivity";
-    private String url = "http://192.168.43.137:3000/login";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
@@ -84,7 +83,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private Button mEmailSignInButton;
     private Button register_button;
     private Button fb_login_button;
-    private Boolean user_is_logged_in;
+    private Boolean user_is_logged_in = false;
     private Profile profile;
 
     @Override
@@ -118,7 +117,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         register_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+                startRegisterActivity();
             }
         });
         fb_login_button = (Button) findViewById(R.id.login_button);
@@ -256,10 +255,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void updateUI(FirebaseUser user) {
-        if (user == null) {
-            this.user_is_logged_in = false;
-        } else {
-            this.user_is_logged_in = true;
+        if (user != null && user_is_logged_in){
             startMainActivity();
         }
     }
@@ -337,53 +333,26 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    private void prueba() {
-        RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
-
-        final JSONObject params = new JSONObject();
-        String url2 = "http://192.168.43.137:3000/ht";
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url2, params,
-            new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    VolleyLog.v("Response:%n %s", response);
-                    if (response.toString() == "200") {
-                        System.out.println("Prueba ok");
-                    }
-                }
-            }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.e("Error: ", error.getMessage());
-            }
-        });
-        queue.add(jsonObjectRequest);
-
-    }
 
     private void post_user_token(final String token){
         RequestQueue queue = Volley.newRequestQueue(this); //TODO usar el singleton
 
         final JSONObject params = new JSONObject();
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     VolleyLog.v("Response:%n %s", response);
-                    if (response.toString() == "200") {
-                        startMainActivity();
-                    }
-                    if (response.toString() == "400") {
-                        startRegisterActivity();
-                    }
-
+                    user_is_logged_in = true;
+                    startMainActivity();
                 }
             }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 VolleyLog.e("Error: ", error.getMessage());
+                user_is_logged_in = false;
+                startRegisterActivity();
             }
         }) {
             /**

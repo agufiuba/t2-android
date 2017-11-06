@@ -32,11 +32,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmlpull.v1.sax2.Driver;
 
-public class DriverSignUpActivity extends AppCompatActivity {
+public class DriverSignUpActivity extends AppCompatActivity implements URL_local {
 
     View focusView = null;
-
-    String url = "http://192.168.1.12:3000/user";
 
     private FirebaseUser user;
     private FirebaseAuth mAuth;
@@ -424,7 +422,7 @@ public class DriverSignUpActivity extends AppCompatActivity {
             car_json.put("music",musica.toString());
             driver_json.put("car",car_json);
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, driver_json,
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url_user, driver_json,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
