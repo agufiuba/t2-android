@@ -2,6 +2,7 @@ package com.example.darius.taller_uber;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,7 +24,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PassengerSignUpActivity extends AppCompatActivity {
+public class PassengerSignUpActivity extends AppCompatActivity implements URL_local {
 
     private EditText nombre;
     private EditText apellido;
@@ -33,7 +34,8 @@ public class PassengerSignUpActivity extends AppCompatActivity {
     private FirebaseUser user;
     private FirebaseAuth mAuth;
     private RequestQueue queue;
-    String url = "http://192.168.1.12:3000/user";
+    private TextInputLayout pwLayout;
+    private boolean fb_register = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +46,10 @@ public class PassengerSignUpActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         configure_layout_elements();
-        load_registration_through_facebook();
+        if (user != null && user.getProviders().contains("facebook.com")){
+            fb_register = true;
+            load_registration_through_facebook();
+        }
         queue = Volley.newRequestQueue(this);
     }
 
@@ -58,6 +63,7 @@ public class PassengerSignUpActivity extends AppCompatActivity {
         apellido = (EditText) findViewById(R.id.apellido);
         password = (EditText) findViewById(R.id.password);
         confirmar = (Button) findViewById(R.id.confirm_signup_button);
+        pwLayout = (TextInputLayout) findViewById(R.id.password_layout);
     }
 
     private void configure_layout_elements() {
@@ -74,12 +80,13 @@ public class PassengerSignUpActivity extends AppCompatActivity {
      */
     private void load_registration_through_facebook() {
         email.setText(user.getEmail());
-        email.setClickable(false);
-        nombre.setText(get_user_first_name());
-        nombre.setClickable(false);
-        apellido.setText(get_user_last_name());
-        apellido.setClickable(false);
-        password.setVisibility(View.INVISIBLE);
+        email.setKeyListener(null);
+        nombre.setText(get_user_last_name());
+        nombre.setKeyListener(null);
+        apellido.setText(get_user_first_name());
+        apellido.setKeyListener(null);
+        pwLayout.setVisibility(View.GONE);
+
     }
 
     /**
@@ -87,75 +94,74 @@ public class PassengerSignUpActivity extends AppCompatActivity {
      * En caso de éxito, desencadena la actividad de ingreso de los métodos de pago.
      */
     private void attemptRegister() {
-
-        // Reset errors.
-        email.setError(null);
-        password.setError(null);
-
-        // Store values at the time of the login attempt.
-        String _email = email.getText().toString();
-        String _password = password.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(_password) && !isPasswordValid(_password)) {
-            password.setError(getString(R.string.error_invalid_password));
-            focusView = password;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(_email)) {
-            email.setError(getString(R.string.error_field_required));
-            focusView = email;
-            cancel = true;
-        } else if (!isEmailValid(_email)) {
-            email.setError(getString(R.string.error_invalid_email));
-            focusView = email;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        }
-
-        if (!cancel) {
-            mAuth.createUserWithEmailAndPassword(_email, _password);
-            mAuth.signInWithEmailAndPassword(_email, _password);
-            user = mAuth.getCurrentUser();
-            String newName = nombre.getText().toString() + " " + apellido.getText().toString();
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                .setDisplayName(newName)
-                .build();
-            user.updateProfile(profileUpdates);
-            //TODO cambiar la actividad
-            //startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
+        if (fb_register){
             sendSignUpRequest();
+        } else {
+            // Reset errors.
+            email.setError(null);
+            password.setError(null);
+
+            // Store values at the time of the login attempt.
+            String _email = email.getText().toString();
+            String _password = password.getText().toString();
+
+            boolean cancel = false;
+            View focusView = null;
+
+            // Check for a valid password, if the user entered one.
+            if (!TextUtils.isEmpty(_password) && !isPasswordValid(_password)) {
+                password.setError(getString(R.string.error_invalid_password));
+                focusView = password;
+                cancel = true;
+            }
+
+            // Check for a valid email address.
+            if (TextUtils.isEmpty(_email)) {
+                email.setError(getString(R.string.error_field_required));
+                focusView = email;
+                cancel = true;
+            } else if (!isEmailValid(_email)) {
+                email.setError(getString(R.string.error_invalid_email));
+                focusView = email;
+                cancel = true;
+            }
+
+            if (cancel) {
+                // There was an error; don't attempt login and focus the first
+                // form field with an error.
+                focusView.requestFocus();
+            }
+
+            if (!cancel) {
+                mAuth.createUserWithEmailAndPassword(_email, _password);
+                mAuth.signInWithEmailAndPassword(_email, _password);
+                user = mAuth.getCurrentUser();
+                String newName = nombre.getText().toString() + " " + apellido.getText().toString();
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setDisplayName(newName)
+                    .build();
+                user.updateProfile(profileUpdates);
+                //TODO cambiar la actividad
+                //startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
+                sendSignUpRequest();
+            }
         }
     }
 
     private void sendSignUpRequest() {
         try {
-            View focusView = email;
-            final JSONObject driver_json = new JSONObject();
-            final JSONObject car_json = new JSONObject();
-            driver_json.put("type", "passenger");
-            driver_json.put("name", nombre.getText().toString());
-            driver_json.put("last_name", apellido.getText().toString());
-            driver_json.put("id", email.getText().toString());
+            final JSONObject passenger_json = new JSONObject();
+            passenger_json.put("type", "passenger");
+            passenger_json.put("name", nombre.getText().toString());
+            passenger_json.put("last_name", apellido.getText().toString());
+            passenger_json.put("mail", email.getText().toString());
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, driver_json,
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url_user, passenger_json,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.e("Respuesta: ", response.toString());
-                        if (response.toString() == "POST user OK") {
-                            startActivity(new Intent(PassengerSignUpActivity.this, MainActivity.class));
-                        }
+                        startActivity(new Intent(PassengerSignUpActivity.this, MainActivity.class));
                     }
                 }, new Response.ErrorListener() {
                 @Override

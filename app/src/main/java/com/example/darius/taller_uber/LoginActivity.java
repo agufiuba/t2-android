@@ -69,9 +69,8 @@ import java.util.Map;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor>, URL_local {
     private static final String TAG = "MainActivity";
-    private String url = "http://192.168.43.137:3000/login";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
@@ -118,7 +117,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         register_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+                startRegisterActivity();
             }
         });
         fb_login_button = (Button) findViewById(R.id.login_button);
@@ -326,6 +325,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
+<<<<<<< HEAD
     @Override
     public void onStop() {
         super.onStop();
@@ -354,6 +354,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
     }
+=======
+>>>>>>> FCM
 
     /**
      * post_user_token
@@ -367,11 +369,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         final JSONObject params = new JSONObject();
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     VolleyLog.v("Response:%n %s", response);
+<<<<<<< HEAD
                     switch (response.toString()){
                         case "200": {
                             user_is_logged_in = true;
@@ -379,6 +382,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             break;
                         }
                     }
+=======
+                    user_is_logged_in = true;
+                    startMainActivity();
+>>>>>>> FCM
                 }
             }, new Response.ErrorListener() {
             @Override

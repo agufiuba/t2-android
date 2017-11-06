@@ -45,7 +45,7 @@ import com.google.firebase.auth.FirebaseAuth;
  */
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+    implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
 
     private enum Estados {ESTADO0, ESTADO1, ESTADO2}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
