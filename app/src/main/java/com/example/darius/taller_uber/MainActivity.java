@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
         requestTravelfab = (FloatingActionButton) findViewById(R.id.fab);
         requestTravelfab.setOnClickListener(new View.OnClickListener() {
             @Override
