@@ -15,12 +15,6 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
-    <service android:name=".MyFirebaseInstanceIDService">
-        <intent-filter>
-            <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-        </intent-filter>
-    </service>
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -101,11 +95,7 @@
         <activity android:name=".PaymentActivity">
         </activity>
 
-        <service
-            android:name="Services.TravelHandler"
-            android:enabled="true"
-            android:exported="true">
-        </service>
+
     </application>
 
 </manifest>

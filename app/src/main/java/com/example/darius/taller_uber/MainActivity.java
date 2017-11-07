@@ -1,6 +1,7 @@
 package com.example.darius.taller_uber;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Geocoder;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -31,7 +32,12 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.maps.android.PolyUtil;
+
+import java.util.List;
 
 /**
  * Solicitud de viaje:
@@ -138,6 +144,7 @@ public class MainActivity extends AppCompatActivity
         // Me posiciono sobre Buenos Aires
         LatLng bsas = new LatLng(-34.599722, -58.381944);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas,12));
+        drawRoute("dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E");
     }
 
     @Override
@@ -224,5 +231,12 @@ public class MainActivity extends AppCompatActivity
         destinationMarker.setDraggable(true);
         autocompleteFragment.setText("");
         configureAutocompleteFragment();
+    }
+
+    private void drawRoute(String encodedPath){
+        List<LatLng> list = PolyUtil.decode(encodedPath);
+        PolylineOptions ruta = new PolylineOptions();
+        ruta.addAll(list);
+        Polyline polyline = mMap.addPolyline(ruta);
     }
 }

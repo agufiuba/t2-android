@@ -249,9 +249,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     public void onStart() {
         super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
-        this.user = mAuth.getCurrentUser();
-        updateUI(user);
+        startMainActivity();
+//        mAuth.addAuthStateListener(mAuthListener);
+//        this.user = mAuth.getCurrentUser();
+//        updateUI(user);
     }
 
     private void updateUI(FirebaseUser user) {
