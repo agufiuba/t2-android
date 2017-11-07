@@ -20,6 +20,14 @@ import android.view.MenuItem;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -34,10 +42,17 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.maps.android.PolyUtil;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Solicitud de viaje:
@@ -53,7 +68,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
 
-    private enum Estados {ESTADO0, ESTADO1, ESTADO2}
+    private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
     //ESTADO2: cuando el usuario puede indicar el destino del trayecto
@@ -65,6 +80,8 @@ public class MainActivity extends AppCompatActivity
     private FloatingActionButton requestTravelfab;
     private FloatingActionButton nextfab;
     private CardView search_card_view;
+    private FirebaseUser user;
+    private RequestQueue queue;
 
     PlaceAutocompleteFragment   autocompleteFragment;
     Place place;
@@ -104,6 +121,9 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
             .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        this.user = FirebaseAuth.getInstance().getCurrentUser();
+        this.queue = Volley.newRequestQueue(this);
     }
 
     @Override
@@ -144,7 +164,7 @@ public class MainActivity extends AppCompatActivity
         // Me posiciono sobre Buenos Aires
         LatLng bsas = new LatLng(-34.599722, -58.381944);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas,12));
-        drawRoute("dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E");
+        //drawRoute("dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E");
     }
 
     @Override
@@ -233,6 +253,56 @@ public class MainActivity extends AppCompatActivity
         configureAutocompleteFragment();
     }
 
+    /**
+     * startEstado3
+     * Estado3: El usuario ya tiene determinado de adonde a adonde ir
+     * Le hace el request al servidor
+     */
+    public void startEstado3(){
+        estado = Estados.ESTADO3;
+        destinationMarker.setDraggable(false);
+        search_card_view.setVisibility(View.GONE);
+        user.getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+            @Override
+            public void onSuccess(GetTokenResult result) {
+                final String idToken = result.getToken();
+                final JSONObject params = new JSONObject();
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            VolleyLog.v("Response:%n %s", response);
+                            //TODO startEstado4();
+                        }
+                    }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.e("Error: ", error.getMessage());
+                        //TODO tirar mensaje de error
+                        //TODO startEstado0();
+                    }
+                }) {
+                    /**
+                     * Request headers
+                     */
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        HashMap<String, String> headers = new HashMap<String, String>();
+                        headers.put("Authorization",idToken);
+                        return headers;
+                    }
+                };
+                queue.add(jsonObjectRequest);
+            }
+        });
+    }
+
+
+    /**
+     * drawRoute
+     * Dibuja la ruta codificada recibida del app server.
+     * @param encodedPath: codigo de camino recibido del app server
+     */
     private void drawRoute(String encodedPath){
         List<LatLng> list = PolyUtil.decode(encodedPath);
         PolylineOptions ruta = new PolylineOptions();

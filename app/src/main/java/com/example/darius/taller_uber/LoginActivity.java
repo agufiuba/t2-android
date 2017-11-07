@@ -28,14 +28,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -61,9 +54,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Callable;
 
 
 /**
@@ -249,10 +241,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     public void onStart() {
         super.onStart();
-        startMainActivity();
-//        mAuth.addAuthStateListener(mAuthListener);
-//        this.user = mAuth.getCurrentUser();
-//        updateUI(user);
+//        startMainActivity();
+        mAuth.addAuthStateListener(mAuthListener);
+        this.user = mAuth.getCurrentUser();
+        updateUI(user);
     }
 
     private void updateUI(FirebaseUser user) {
@@ -355,7 +347,30 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
     }
 
+    private class onTokenPostSuccess implements Runnable {
+        @Override
+        public void run() {
+            user_is_logged_in = true;
+            startMainActivity();
+        }
+    }
 
+    private class onTokenPostFailure implements Runnable {
+        @Override
+        public void run() {
+            user_is_logged_in = false;
+            startRegisterActivity();
+        }
+    }
+//    private void onTokenPostSuccess(){
+//        user_is_logged_in = true;
+//        startMainActivity();
+//    }
+//
+//    private void onTokenPostFailure(){
+//        user_is_logged_in = false;
+//        startRegisterActivity();
+//    }
     /**
      * post_user_token
      * Envía al appserver el token de usuario de firebase.
@@ -364,37 +379,41 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * @param token: token de usuario de firebase
      */
     private void post_user_token(final String token){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
+        Comunicador comunicador = new Comunicador(user,this);
         final JSONObject params = new JSONObject();
+        comunicador.requestAuthenticated(new onTokenPostSuccess(), new onTokenPostFailure(), url_login, params, Request.Method.POST);
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
-            new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    VolleyLog.v("Response:%n %s", response);
-                    user_is_logged_in = true;
-                    startMainActivity();
-                }
-            }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.e("Error: ", error.getMessage());
-                user_is_logged_in = false;
-                startRegisterActivity();
-            }
-        }) {
-            /**
-             * Request headers
-             */
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                headers.put("Authorization",token);
-                return headers;
-            }
-        };
-        queue.add(jsonObjectRequest);
+//        RequestQueue queue = Volley.newRequestQueue(this);
+//
+//        final JSONObject params = new JSONObject();
+//
+//        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
+//            new Response.Listener<JSONObject>() {
+//                @Override
+//                public void onResponse(JSONObject response) {
+//                    VolleyLog.v("Response:%n %s", response);
+//                    user_is_logged_in = true;
+//                    startMainActivity();
+//                }
+//            }, new Response.ErrorListener() {
+//            @Override
+//            public void onErrorResponse(VolleyError error) {
+//                VolleyLog.e("Error: ", error.getMessage());
+//                user_is_logged_in = false;
+//                startRegisterActivity();
+//            }
+//        }) {
+//            /**
+//             * Request headers
+//             */
+//            @Override
+//            public Map<String, String> getHeaders() throws AuthFailureError {
+//                HashMap<String, String> headers = new HashMap<String, String>();
+//                headers.put("Authorization",token);
+//                return headers;
+//            }
+//        };
+//        queue.add(jsonObjectRequest);
     }
 
     private boolean isEmailValid(String email) {
