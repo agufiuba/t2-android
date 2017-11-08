@@ -347,7 +347,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
     }
 
-    private class onTokenPostSuccess implements Runnable {
+    private class onTokenPostSuccess extends RequestHandler {
         @Override
         public void run() {
             user_is_logged_in = true;
@@ -355,7 +355,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    private class onTokenPostFailure implements Runnable {
+    private class onTokenPostFailure extends RequestHandler {
         @Override
         public void run() {
             user_is_logged_in = false;

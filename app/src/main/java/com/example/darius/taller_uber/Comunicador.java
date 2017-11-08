@@ -37,8 +37,8 @@ public class Comunicador {
         this.queue = Volley.newRequestQueue(context);
     }
 
-    public void requestAuthenticated(final Runnable onSuccess,
-                                     final Runnable onError,
+    public void requestAuthenticated(final RequestHandler onSuccess,
+                                     final RequestHandler onError,
                                      final String url,
                                      final JSONObject params,
                                      final int method) {
@@ -53,6 +53,7 @@ public class Comunicador {
                             public void onResponse(JSONObject response) {
                                 VolleyLog.v("Response:%n %s", response);
                                 try {
+                                    onSuccess.setJson(response);
                                     onSuccess.run();
                                 } catch (Exception e) {
                                     Log.d(TAG, e.toString());
@@ -84,8 +85,8 @@ public class Comunicador {
             });
     }
 
-    public void requestFree(final Runnable onSuccess,
-                            final Runnable onError,
+    public void requestFree(final RequestHandler onSuccess,
+                            final RequestHandler onError,
                             final String url,
                             final JSONObject params,
                             final int method) {
@@ -96,6 +97,7 @@ public class Comunicador {
                     public void onResponse(JSONObject response) {
                         Log.e("Respuesta: ", response.toString());
                         try {
+                            onSuccess.setJson(response);
                             onSuccess.run();
                         } catch (Exception e) {
                             Log.d(TAG, e.toString());

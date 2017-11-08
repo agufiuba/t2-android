@@ -28,9 +28,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmlpull.v1.sax2.Driver;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DriverSignUpActivity extends AppCompatActivity implements URL_local {
 
@@ -38,27 +42,34 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
 
     private FirebaseUser user;
     private FirebaseAuth mAuth;
-    final CharSequence[] modelos = {"Ford Fiesta", "Chevrolet S10",
-        "Toyota Hilux", "Fiat Palio", "Renault Scenic"};
+//    final String[] modelos = {"Ford Fiesta", "Chevrolet S10",
+//        "Toyota Hilux", "Fiat Palio", "Renault Scenic"};
+//
+//    final String[] colores = {"Negro", "Amarillo", "Azul", "Rojo",
+//        "Gris", "Blanco", "Verde"};
+//    final String[] estados = {"Excelente", "Bueno", "Destartalado", "PicaPiedra"};
+//    final String[] aire_options = {"Sí", "No"};
+//    final String[] musicas = {"Clasica", "Jazz", "Tango", "Rock", "Folklore", "Pop"};
+    String[] modelos;
+    String[] colores;
+    String[] estados;
+    String[] aire_options;
+    String[] musicas;
 
-    final CharSequence[] colores = {"Negro", "Amarillo", "Azul", "Rojo",
-        "Gris", "Blanco", "Verde"};
-    final CharSequence[] estados = {"Excelente", "Bueno", "Destartalado", "PicaPiedra"};
-    final CharSequence[] aire_options = {"Sí", "No"};
-    final CharSequence[] musicas = {"Clasica", "Jazz", "Tango", "Rock", "Folklore", "Pop"};
-
-    CharSequence modelo = null;
-    CharSequence color = null;
-    CharSequence estado = null;
-    CharSequence aire = null;
+    String modelo = null;
+    String color = null;
+    String estado = null;
+    String aire = null;
     String patente = null;
-    CharSequence musica = null;
+    String musica = null;
     LinearLayout modelo_layout, color_layout, patente_layout, estado_layout, aire_layout, musica_layout;
 
     EditText nombre, apellido, email, password;
     TextView modelo_label, color_label, patente_label, estado_label, aire_label, musica_label;
     Button confirm_signup_button;
     RequestQueue requestQueue;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +79,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
 
         load_layout_elements();
         configure_layout_elements();
+        requestCharSequences();
         requestQueue = Volley.newRequestQueue(this);
     }
 
@@ -136,11 +148,64 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         });
     }
 
+    /**
+     * requestCharSequences
+     * Solicita al app server los parametros de las opciones modelos,
+     * colores, estados, aire y musicas para que ingrese el usuario que se registra.
+     */
+    private void requestCharSequences(){
+        String url_modelos = url + "/car/model";
+        String url_colores = url + "/car/colors";
+        String url_estados = url + "/car/estados";
+        String url_aire = url + "/car/aire";
+        String url_musicas = url + "/car/musicas";
+
+        JSONObject jsonObject = new JSONObject();
+        RequestHandler onSuccess = new RequestHandler() {
+            @Override
+            public void run() {}
+        };
+
+        RequestHandler onError = new RequestHandler() {
+            @Override
+            public void run(){}
+        };
+
+        Comunicador comunicador = new Comunicador(user, this);
+        comunicador.requestFree(onSuccess,onError,url_modelos,jsonObject,Request.Method.GET);
+        modelos = setFromJson(onSuccess.getJson());
+        comunicador.requestFree(onSuccess,onError,url_colores,jsonObject,Request.Method.GET);
+        colores = setFromJson(onSuccess.getJson());
+        comunicador.requestFree(onSuccess,onError,url_estados,jsonObject,Request.Method.GET);
+        estados = setFromJson(onSuccess.getJson());
+        comunicador.requestFree(onSuccess,onError,url_aire,jsonObject,Request.Method.GET);
+        aire_options = setFromJson(onSuccess.getJson());
+        comunicador.requestFree(onSuccess,onError,url_musicas,jsonObject,Request.Method.GET);
+        musicas = setFromJson(onSuccess.getJson());
+    }
+
+    private String[] setFromJson(JSONObject jsonObject){
+        String[] options;
+        JSONArray arr;
+        List<String> _options = new ArrayList<String>();
+        try {
+            arr = jsonObject.getJSONArray("parameters");
+
+            for(int i = 0; i < arr.length(); i++){
+                _options.add(arr.getString(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        options =(String[])_options.toArray();
+        return options;
+    }
+
     private void popup_modelo() {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Marca");
 
-        final CharSequence modelo_previo = modelo;
+        final String modelo_previo = modelo;
 
         alert.setSingleChoiceItems(modelos, 1, new DialogInterface.OnClickListener() {
             @Override
@@ -169,7 +234,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Color del vehículo");
 
-        final CharSequence color_previo = color;
+        final String color_previo = color;
         alert.setSingleChoiceItems(colores, 1, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -220,7 +285,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Estado del vehículo");
 
-        final CharSequence estado_previo = estado;
+        final String estado_previo = estado;
         alert.setSingleChoiceItems(estados, 1, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -248,7 +313,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Tiene aire acondicionado");
 
-        final CharSequence aire_previo = aire;
+        final String aire_previo = aire;
         alert.setSingleChoiceItems(aire_options, 1, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -277,7 +342,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Música habitual");
 
-        final CharSequence musica_previa = musica;
+        final String musica_previa = musica;
         alert.setSingleChoiceItems(musicas, 1, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {

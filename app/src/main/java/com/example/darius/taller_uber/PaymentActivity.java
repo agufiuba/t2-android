@@ -20,6 +20,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -96,22 +97,26 @@ public class PaymentActivity extends AppCompatActivity implements URL_local{
 
             passenger_json.put("credenciales",pago_json);
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url_user, passenger_json,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.e("Respuesta: ", response.toString());
-                        startActivity(new Intent(PaymentActivity.this, MainActivity.class));
-                    }
-                }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e("Error: ", error.getMessage());
-                }
-            });
-            queue.add(postRequest);
+            Comunicador comunicador =
+                new Comunicador(FirebaseAuth.getInstance().getCurrentUser(),this);
+            comunicador.requestFree(new onSignUpSuccess(), new onSignUpFailure(),
+                url_user,passenger_json,Request.Method.POST);
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    private class onSignUpSuccess extends RequestHandler {
+        @Override
+        public void run() {
+            startActivity(new Intent(PaymentActivity.this, MainActivity.class));
+        }
+    }
+
+    private class onSignUpFailure extends RequestHandler {
+        @Override
+        public void run() {
+            //TODO implementar
         }
     }
 }

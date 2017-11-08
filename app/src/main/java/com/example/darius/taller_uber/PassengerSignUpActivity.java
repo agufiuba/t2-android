@@ -95,7 +95,7 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
      */
     private void attemptRegister() {
         if (fb_register){
-            sendSignUpRequest();
+            goToPaymentActivity();
         } else {
             // Reset errors.
             email.setError(null);
@@ -156,33 +156,6 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
         intent.putExtra("last_name", apellido.getText().toString());
         intent.putExtra("mail", email.getText().toString());
         startActivity(intent);
-    }
-
-    private void sendSignUpRequest() {
-        try {
-            final JSONObject passenger_json = new JSONObject();
-            passenger_json.put("type", "passenger");
-            passenger_json.put("name", nombre.getText().toString());
-            passenger_json.put("last_name", apellido.getText().toString());
-            passenger_json.put("mail", email.getText().toString());
-
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url_user, passenger_json,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.e("Respuesta: ", response.toString());
-                        startActivity(new Intent(PassengerSignUpActivity.this, MainActivity.class));
-                    }
-                }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e("Error: ", error.getMessage());
-                }
-            });
-            queue.add(postRequest);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     private boolean isEmailValid(String email) {
