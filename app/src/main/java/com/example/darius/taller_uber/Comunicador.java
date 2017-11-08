@@ -59,8 +59,7 @@ public class Comunicador {
                             public void onResponse(JSONObject response) {
                                 VolleyLog.v("Response:%n %s", response);
                                 try {
-                                    answer = response;
-//                                    onRequestSequencesSuccess.setJson(response);
+                                    onSuccess.setJson(response);
                                     onSuccess.run();
                                 } catch (Exception e) {
                                     Log.d(TAG, e.toString());
@@ -104,7 +103,7 @@ public class Comunicador {
                     public void onResponse(JSONObject response) {
                         VolleyLog.v("Response:%n %s", response);
                         try {
-                            answer = response;
+                            onSuccess.setJson(response);
                             onSuccess.run();
                         } catch (Exception e) {
                             Log.d(TAG, e.toString());

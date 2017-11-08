@@ -27,22 +27,113 @@
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:id="@+id/search_card_view"
         android:layout_width="match_parent"
-        android:visibility="invisible"
-        android:padding="10dp"
-        android:translationY="?attr/actionBarSize"
         android:layout_height="40dp"
         android:layout_gravity="top"
         android:layout_margin="5dp"
+        android:padding="10dp"
+        android:translationY="?attr/actionBarSize"
+        android:visibility="invisible"
         card_view:cardCornerRadius="4dp">
 
         <fragment
             android:id="@+id/place_autocomplete_fragment"
-            android:layout_margin="10dp"
             android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"/>
+
 
     </android.support.v7.widget.CardView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|bottom"
+        android:orientation="vertical"
+        >
+
+
+        <LinearLayout
+            android:id="@+id/routeSpecs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:background="@color/cardview_light_background"
+            android:gravity="center|bottom"
+            android:orientation="horizontal"
+            >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Distancia:"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/distancia"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Duración:"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/duracion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Precio:"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/costo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/nextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:paddingBottom="20dp"
+            android:text="Indicar Recogida"/>
+
+    </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -50,6 +141,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
         android:layout_margin="@dimen/fab_margin"
+        android:visibility="gone"
         app:srcCompat="@drawable/solicitar_viaje"/>
 
     <android.support.design.widget.FloatingActionButton
@@ -60,13 +152,5 @@
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@drawable/rarrow"/>
 
-    <!--<Button-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="center|bottom"-->
-        <!--android:text="Miraqboton"-->
-        <!--android:padding="10dp"-->
-        <!--android:layout_marginTop="20dp"-->
-        <!--android:paddingBottom="20dp"/>-->
 
 </android.support.design.widget.CoordinatorLayout>

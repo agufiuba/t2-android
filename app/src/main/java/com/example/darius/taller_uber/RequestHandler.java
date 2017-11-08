@@ -7,7 +7,7 @@ import org.json.JSONObject;
  */
 
 public abstract class RequestHandler implements Runnable {
-    private JSONObject jsonRecv;
+    protected JSONObject jsonRecv;
 
     public void run(){}
 
