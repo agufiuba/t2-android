@@ -31,10 +31,16 @@ public class Comunicador {
 
     private FirebaseUser user;
     private RequestQueue queue;
+    private JSONObject answer;
 
     Comunicador(final FirebaseUser user, final Context context) {
         this.user = user;
         this.queue = Volley.newRequestQueue(context);
+        answer = new JSONObject();
+    }
+
+    public JSONObject getAnswerJSON(){
+        return answer;
     }
 
     public void requestAuthenticated(final RequestHandler onSuccess,
@@ -53,7 +59,8 @@ public class Comunicador {
                             public void onResponse(JSONObject response) {
                                 VolleyLog.v("Response:%n %s", response);
                                 try {
-                                    onSuccess.setJson(response);
+                                    answer = response;
+//                                    onRequestSequencesSuccess.setJson(response);
                                     onSuccess.run();
                                 } catch (Exception e) {
                                     Log.d(TAG, e.toString());
@@ -90,14 +97,14 @@ public class Comunicador {
                             final String url,
                             final JSONObject params,
                             final int method) {
-        JsonObjectRequest postRequest =
+        JsonObjectRequest jsonObjectRequest =
             new JsonObjectRequest(method, url, params,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.e("Respuesta: ", response.toString());
+                        VolleyLog.v("Response:%n %s", response);
                         try {
-                            onSuccess.setJson(response);
+                            answer = response;
                             onSuccess.run();
                         } catch (Exception e) {
                             Log.d(TAG, e.toString());
@@ -114,6 +121,6 @@ public class Comunicador {
                     }
                 }
             });
-        queue.add(postRequest);
+        queue.add(jsonObjectRequest);
     }
 }

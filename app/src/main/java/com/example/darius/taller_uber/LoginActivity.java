@@ -177,7 +177,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     AccessToken token;
-                    Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                    Log.d(TAG, "facebook:onRequestSequencesSuccess:" + loginResult);
                     token = loginResult.getAccessToken();
                     handleFacebookAccessToken(token);
 //                    startMainActivity();
@@ -190,7 +190,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 @Override
                 public void onError(FacebookException e) {
-                    Log.d(TAG, "facebook:onError", e);
+                    Log.d(TAG, "facebook:onRequestSequencesError", e);
                 }
             });
     }

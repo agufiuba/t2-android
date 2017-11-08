@@ -9,7 +9,7 @@ import org.json.JSONObject;
 public abstract class RequestHandler implements Runnable {
     private JSONObject jsonRecv;
 
-    public abstract void run();
+    public void run(){}
 
     public void setJson(JSONObject json){
         this.jsonRecv = json;

@@ -3,13 +3,10 @@ package com.example.darius.taller_uber;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,13 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.firebase.auth.AuthResult;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -31,44 +22,42 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xmlpull.v1.sax2.Driver;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DriverSignUpActivity extends AppCompatActivity implements URL_local {
 
-    View focusView = null;
+    private View focusView = null;
 
     private FirebaseUser user;
     private FirebaseAuth mAuth;
-//    final String[] modelos = {"Ford Fiesta", "Chevrolet S10",
-//        "Toyota Hilux", "Fiat Palio", "Renault Scenic"};
-//
-//    final String[] colores = {"Negro", "Amarillo", "Azul", "Rojo",
-//        "Gris", "Blanco", "Verde"};
-//    final String[] estados = {"Excelente", "Bueno", "Destartalado", "PicaPiedra"};
-//    final String[] aire_options = {"Sí", "No"};
-//    final String[] musicas = {"Clasica", "Jazz", "Tango", "Rock", "Folklore", "Pop"};
-    String[] modelos;
-    String[] colores;
-    String[] estados;
-    String[] aire_options;
-    String[] musicas;
+    final String[] modelos = {"Ford Fiesta", "Chevrolet S10",
+        "Toyota Hilux", "Fiat Palio", "Renault Scenic"};
 
-    String modelo = null;
-    String color = null;
-    String estado = null;
-    String aire = null;
-    String patente = null;
-    String musica = null;
-    LinearLayout modelo_layout, color_layout, patente_layout, estado_layout, aire_layout, musica_layout;
+    final String[] colores = {"Negro", "Amarillo", "Azul", "Rojo",
+        "Gris", "Blanco", "Verde"};
+    final String[] estados = {"Excelente", "Bueno", "Destartalado", "PicaPiedra"};
+    final String[] aire_options = {"Sí", "No"};
+    final String[] musicas = {"Clasica", "Jazz", "Tango", "Rock", "Folklore", "Pop"};
+//    private String[] modelos;
+//    private String[] colores;
+//    private String[] estados;
+//    private String[] aire_options;
+//    private String[] musicas;
 
-    EditText nombre, apellido, email, password;
-    TextView modelo_label, color_label, patente_label, estado_label, aire_label, musica_label;
-    Button confirm_signup_button;
-    RequestQueue requestQueue;
+    private String modelo = null;
+    private String color = null;
+    private String estado = null;
+    private String aire = null;
+    private String patente = null;
+    private String musica = null;
+    private LinearLayout modelo_layout, color_layout, patente_layout, estado_layout, aire_layout, musica_layout;
 
+    private EditText nombre, apellido, email, password;
+    private TextView modelo_label, color_label, patente_label, estado_label, aire_label, musica_label;
+    private Button confirm_signup_button;
+    private Comunicador comunicador;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,8 +68,8 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
 
         load_layout_elements();
         configure_layout_elements();
-        requestCharSequences();
-        requestQueue = Volley.newRequestQueue(this);
+        comunicador = new Comunicador(user, this);
+//        requestCharSequences();
     }
 
     private void load_layout_elements() {
@@ -148,41 +137,47 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         });
     }
 
-    /**
-     * requestCharSequences
-     * Solicita al app server los parametros de las opciones modelos,
-     * colores, estados, aire y musicas para que ingrese el usuario que se registra.
-     */
-    private void requestCharSequences(){
-        String url_modelos = url + "/car/model";
-        String url_colores = url + "/car/colors";
-        String url_estados = url + "/car/estados";
-        String url_aire = url + "/car/aire";
-        String url_musicas = url + "/car/musicas";
-
-        JSONObject jsonObject = new JSONObject();
-        RequestHandler onSuccess = new RequestHandler() {
-            @Override
-            public void run() {}
-        };
-
-        RequestHandler onError = new RequestHandler() {
-            @Override
-            public void run(){}
-        };
-
-        Comunicador comunicador = new Comunicador(user, this);
-        comunicador.requestFree(onSuccess,onError,url_modelos,jsonObject,Request.Method.GET);
-        modelos = setFromJson(onSuccess.getJson());
-        comunicador.requestFree(onSuccess,onError,url_colores,jsonObject,Request.Method.GET);
-        colores = setFromJson(onSuccess.getJson());
-        comunicador.requestFree(onSuccess,onError,url_estados,jsonObject,Request.Method.GET);
-        estados = setFromJson(onSuccess.getJson());
-        comunicador.requestFree(onSuccess,onError,url_aire,jsonObject,Request.Method.GET);
-        aire_options = setFromJson(onSuccess.getJson());
-        comunicador.requestFree(onSuccess,onError,url_musicas,jsonObject,Request.Method.GET);
-        musicas = setFromJson(onSuccess.getJson());
+    private class onRequestSequencesSuccess extends RequestHandler {
+        @Override
+        public void run() {}
     }
+
+    private class onRequestSequencesError extends RequestHandler {
+        @Override
+        public void run(){}
+    }
+
+//    /**
+//     * requestCharSequences
+//     * Solicita al app server los parametros de las opciones modelos,
+//     * colores, estados, aire y musicas para que ingrese el usuario que se registra.
+//     */
+//    private void requestCharSequences(){
+//        String url_modelos = url + "parameters/car/model";
+//        String url_colores = url + "parameters/car/colour";
+//        String url_estados = url + "parameters/car/state";
+//        String url_aire = url + "parameters/car/air_conditioner";
+//        String url_musicas = url + "parameters/car/music";
+//
+//        final JSONObject jsonObject = new JSONObject();
+//        onRequestSequencesSuccess success = new onRequestSequencesSuccess();
+//        onRequestSequencesError error = new onRequestSequencesError();
+//        try {
+//            jsonObject.put("nana","jaja");
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//        comunicador.requestFree(success, error,url_modelos,jsonObject,Request.Method.GET);
+//        modelos = setFromJson(comunicador.getAnswerJSON());
+//        comunicador.requestFree(success, error,url_colores,jsonObject,Request.Method.GET);
+//        colores = setFromJson(comunicador.getAnswerJSON());
+//        comunicador.requestFree(success, error,url_estados,jsonObject,Request.Method.GET);
+//        estados = setFromJson(comunicador.getAnswerJSON());
+//        comunicador.requestFree(success, error,url_aire,jsonObject,Request.Method.GET);
+//        aire_options = setFromJson(comunicador.getAnswerJSON());
+//        comunicador.requestFree(success, error,url_musicas,jsonObject,Request.Method.GET);
+//        musicas = setFromJson(comunicador.getAnswerJSON());
+//    }
 
     private String[] setFromJson(JSONObject jsonObject){
         String[] options;
@@ -476,8 +471,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
             driver_json.put("type","driver");
             driver_json.put("name",nombre.getText().toString());
             driver_json.put("last_name",apellido.getText().toString());
-            driver_json.put("id",email.getText().toString());
-            driver_json.put("facebook_acount","Darius Maitia");
+            driver_json.put("mail",email.getText().toString());
             car_json.put("model",modelo.toString());
             car_json.put("color",color.toString());
             car_json.put("patent",patente);
@@ -487,22 +481,23 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
             car_json.put("music",musica.toString());
             driver_json.put("car",car_json);
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url_user, driver_json,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.e("Respuesta: ", response.toString());
-                        if (response.toString() == "POST user OK"){
-                            startActivity(new Intent(DriverSignUpActivity.this, MainActivity.class));
-                        }
-                    }
-                }, new Response.ErrorListener() {
+            class onSuccess extends RequestHandler {
                 @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e("Error: ", error.getMessage());
+                public void run() {
+                    startActivity(new Intent(DriverSignUpActivity.this, MainActivity.class));
                 }
-            });
-            requestQueue.add(postRequest);
+            }
+
+            class onError extends RequestHandler {
+                @Override
+                public void run(){
+                    //TODO mostrar mensaje de error y volver a pantalla principal
+                    startActivity(new Intent(DriverSignUpActivity.this, LoginActivity.class));
+                }
+            }
+
+            comunicador.requestFree(new onSuccess(), new onError(), url_user, driver_json, Request.Method.POST);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }

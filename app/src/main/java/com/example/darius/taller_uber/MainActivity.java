@@ -128,12 +128,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+
+//        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+//        if (drawer.isDrawerOpen(GravityCompat.START)) {
+//            drawer.closeDrawer(GravityCompat.START);
+//        } else {
+//            super.onBackPressed();
+//        }
     }
 
     private void configureAutocompleteFragment(){
@@ -262,39 +263,13 @@ public class MainActivity extends AppCompatActivity
         estado = Estados.ESTADO3;
         destinationMarker.setDraggable(false);
         search_card_view.setVisibility(View.GONE);
-        user.getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
-            @Override
-            public void onSuccess(GetTokenResult result) {
-                final String idToken = result.getToken();
-                final JSONObject params = new JSONObject();
-                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
-                    new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            VolleyLog.v("Response:%n %s", response);
-                            //TODO startEstado4();
-                        }
-                    }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        VolleyLog.e("Error: ", error.getMessage());
-                        //TODO tirar mensaje de error
-                        //TODO startEstado0();
-                    }
-                }) {
-                    /**
-                     * Request headers
-                     */
-                    @Override
-                    public Map<String, String> getHeaders() throws AuthFailureError {
-                        HashMap<String, String> headers = new HashMap<String, String>();
-                        headers.put("Authorization",idToken);
-                        return headers;
-                    }
-                };
-                queue.add(jsonObjectRequest);
-            }
-        });
+        Comunicador comunicador = new Comunicador(user,this);
+        RequestHandler onSuccess = new RequestHandler() {};
+        RequestHandler onError = new RequestHandler() {};
+        JSONObject params = new JSONObject();
+        comunicador.requestAuthenticated(onSuccess,onError,url,params,Request.Method.POST);
+
+
     }
 
 

@@ -31,7 +31,6 @@ public class PaymentActivity extends AppCompatActivity implements URL_local{
     Button confirmar;
     EditText numero, expMonth, expYear, ccvv;
     GridLayout inputLayout;
-    private RequestQueue queue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +48,6 @@ public class PaymentActivity extends AppCompatActivity implements URL_local{
         expMonth = (EditText) findViewById(R.id.expiration_month);
         expYear = (EditText) findViewById(R.id.expiration_year);
         ccvv = (EditText) findViewById(R.id.ccvv);
-        queue = Volley.newRequestQueue(this);
     }
 
     private void configure_layout_elements() {
@@ -88,14 +86,13 @@ public class PaymentActivity extends AppCompatActivity implements URL_local{
             passenger_json.put("last_name", getIntent().getStringExtra("last_name"));
             passenger_json.put("mail", getIntent().getStringExtra("mail"));
 
-            pago_json.put("expiration_month", expMonth.getText().toString());
-            pago_json.put("expiration_year", expYear.getText().toString());
-            pago_json.put("method","card");
-            pago_json.put("type","visa");
+            pago_json.put("expirationMonth", expMonth.getText().toString());
+            pago_json.put("expirationYear", expYear.getText().toString());
+            pago_json.put("typeCard","visa");
             pago_json.put("number",numero.getText().toString());
-            pago_json.put("ccvv",ccvv.getText().toString());
+            pago_json.put("securityCode",ccvv.getText().toString());
 
-            passenger_json.put("credenciales",pago_json);
+            passenger_json.put("card",pago_json);
 
             Comunicador comunicador =
                 new Comunicador(FirebaseAuth.getInstance().getCurrentUser(),this);
