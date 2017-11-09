@@ -60,7 +60,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
 
-    private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
+    private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
     //ESTADO2: cuando el usuario puede indicar el destino del trayecto
@@ -125,15 +125,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         switch (estado){
-            case ESTADO4:
-                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()){
-                    entry.getKey().remove();
-                }
-                routes.clear();
-                routeSpecs.setVisibility(View.INVISIBLE);
-                startEstado2();
-                //TODO: fusionar el estado 3 y el estado 4
-                break;
             case ESTADO3:
                 for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()){
                     entry.getKey().remove();
@@ -188,7 +179,7 @@ public class MainActivity extends AppCompatActivity
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas,12));
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener(){
             public void onPolylineClick(Polyline polyline) {
-                showRoadDetails(polyline.getId());
+                showRoadDetails(polyline);
             }
         });
     }
@@ -305,27 +296,38 @@ public class MainActivity extends AppCompatActivity
         buttonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                startEstado3();
-                pruebaStartEstado4();
+                requestRoute();
             }
         });
     }
 
     /**
-     * startEstado3
-     * Estado3: El usuario ya tiene determinado de adonde a adonde ir
-     * Le hace el request al servidor para recibir los caminos y los precios.
+     * requestRoute
+     * El usuario ya tiene determinado de adonde a adonde ir
+     * Le hace el request al servidor para recibir los caminos y los precios
+     * e inicia el estado 3.
      */
-    public void startEstado3(){
+    public void requestRoute(){
         estado = Estados.ESTADO3;
         destinationMarker.setDraggable(false);
         search_card_view.setVisibility(View.GONE);
         Comunicador comunicador = new Comunicador(user,this);
+        JSONObject from_to = new JSONObject();
+        String from = originMarker.getPosition().toString();
+        from = from.substring(10,from.length()-1);
+        String to = destinationMarker.getPosition().toString();
+        to = to.substring(10,to.length()-1);
+        try {
+            from_to.put("from",from);
+            from_to.put("to",to);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         class onRequestSuccess extends RequestHandler{
             @Override
             public void run(){
-                startEstado4(jsonRecv);
+                startEstado3(jsonRecv);
             }
         }
 
@@ -337,19 +339,42 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        RequestHandler onError = new RequestHandler() {};
         comunicador.requestAuthenticated(new onRequestSuccess(),
-            new onRequestFailure(), url, new JSONObject(),Request.Method.POST);
-
-
-
+            new onRequestFailure(), url_trip, from_to,Request.Method.POST);
     }
 
+    /**
+     * startEstado3
+     * Habiendose recibido el json con la ruta y los detalles de la ruta,
+     * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
+     * El boton pasa a ser boton para solicitar el viaje.
+     * @param routeDetails: respuesta al request hecho al APP en requestRoute
+     */
+    public void startEstado3(JSONObject routeDetails){
+        try {
+            this.estado = Estados.ESTADO3;
+            buttonNext.setText("Solicitar Viaje");
+            routes.put(drawRoute(routeDetails.getString("points")),
+                new RouteDetails(routeDetails.getString("distance"),
+                    routeDetails.getString("time"),
+                    routeDetails.getString("cost")));
+            /*JSONArray jsonArray = jsonObject.getJSONArray("").getJSONArray(0);
+            for(int i = 0; i < jsonArray.length(); i++){
+                JSONObject json = jsonArray.getJSONObject(i);
+                routes.put(drawRoute(json.getString("polyline")),
+                    new RouteDetails(json.getString("km"),
+                        json.getString("time"),
+                        json.getString("costo")));
 
+            }*/
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 
-    public void pruebaStartEstado4(){
+    public void startEstado3prueba(){
         //TODO borrar esto
-        this.estado = Estados.ESTADO4;
+        this.estado = Estados.ESTADO3;
         String pllne = "dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E";
         routes.put(drawRoute(pllne),new RouteDetails("5km","30min","100$"));
 
@@ -364,27 +389,12 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void showRoadDetails(String roadId){
-        RouteDetails details = routes.get(roadId);
+    private void showRoadDetails(Polyline polyline){
+        RouteDetails details = routes.get(polyline);
         distancia.setText(details.distancia);
         duracion.setText(details.duracion);
         costo.setText(details.costo);
         routeSpecs.setVisibility(View.VISIBLE);
-    }
-    public void startEstado4(JSONObject jsonObject){
-        try {
-            JSONArray jsonArray = jsonObject.getJSONArray("rutas").getJSONArray(0);
-            for(int i = 0; i < jsonArray.length(); i++){
-                JSONObject json = jsonArray.getJSONObject(i);
-                routes.put(drawRoute(json.getString("polyline")),
-                    new RouteDetails(json.getString("km"),
-                        json.getString("time"),
-                        json.getString("costo")));
-
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
