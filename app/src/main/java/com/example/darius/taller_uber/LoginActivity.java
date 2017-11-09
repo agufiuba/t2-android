@@ -362,15 +362,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             startRegisterActivity();
         }
     }
-//    private void onTokenPostSuccess(){
-//        user_is_logged_in = true;
-//        startMainActivity();
-//    }
-//
-//    private void onTokenPostFailure(){
-//        user_is_logged_in = false;
-//        startRegisterActivity();
-//    }
+
     /**
      * post_user_token
      * Envía al appserver el token de usuario de firebase.
@@ -381,39 +373,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void post_user_token(final String token){
         Comunicador comunicador = new Comunicador(user,this);
         final JSONObject params = new JSONObject();
-        comunicador.requestAuthenticated(new onTokenPostSuccess(), new onTokenPostFailure(), url_login, params, Request.Method.POST);
-
-//        RequestQueue queue = Volley.newRequestQueue(this);
-//
-//        final JSONObject params = new JSONObject();
-//
-//        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url_login, params,
-//            new Response.Listener<JSONObject>() {
-//                @Override
-//                public void onResponse(JSONObject response) {
-//                    VolleyLog.v("Response:%n %s", response);
-//                    user_is_logged_in = true;
-//                    startMainActivity();
-//                }
-//            }, new Response.ErrorListener() {
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//                VolleyLog.e("Error: ", error.getMessage());
-//                user_is_logged_in = false;
-//                startRegisterActivity();
-//            }
-//        }) {
-//            /**
-//             * Request headers
-//             */
-//            @Override
-//            public Map<String, String> getHeaders() throws AuthFailureError {
-//                HashMap<String, String> headers = new HashMap<String, String>();
-//                headers.put("Authorization",token);
-//                return headers;
-//            }
-//        };
-//        queue.add(jsonObjectRequest);
+        comunicador.requestAuthenticated(new onTokenPostSuccess(),
+            new onTokenPostFailure(), url_login, params, Request.Method.POST);
     }
 
     private boolean isEmailValid(String email) {
