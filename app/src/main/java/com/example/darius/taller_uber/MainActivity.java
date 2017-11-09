@@ -67,10 +67,8 @@ public class MainActivity extends AppCompatActivity
 
     private Estados estado;
     private GoogleMap mMap;
-    private Marker originMarker;
-    private Marker destinationMarker;
-    private FloatingActionButton requestTravelfab;
-    private FloatingActionButton nextfab;
+    private Marker originMarker = null;
+    private Marker destinationMarker = null;
     private CardView search_card_view;
     private Button buttonNext;
     private FirebaseUser user;
@@ -78,7 +76,7 @@ public class MainActivity extends AppCompatActivity
     private LinearLayout routeSpecs;
     private TextView distancia, duracion, costo;
 
-    private Map<String, RouteDetails> routes;
+    private Map<Polyline, RouteDetails> routes;
 
     PlaceAutocompleteFragment   autocompleteFragment;
     Place place;
@@ -92,7 +90,6 @@ public class MainActivity extends AppCompatActivity
 
         buttonNext = (Button) findViewById(R.id.nextButton);
 
-        requestTravelfab = (FloatingActionButton) findViewById(R.id.fab);
         search_card_view = (CardView) findViewById(R.id.search_card_view);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
@@ -109,13 +106,14 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
             .findFragmentById(R.id.map);
 
-        routes = new HashMap<String, RouteDetails>();
+        routes = new HashMap<Polyline, RouteDetails>();
         routeSpecs = (LinearLayout) findViewById(R.id.routeSpecs);
         Animation slide_up = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
         routeSpecs.setAnimation(slide_up);
         distancia = (TextView) findViewById(R.id.distancia);
         duracion = (TextView) findViewById(R.id.duracion);
         costo = (TextView) findViewById(R.id.costo);
+        search_card_view = (CardView) findViewById(R.id.search_card_view);
 
         mapFragment.getMapAsync(this);
         this.user = FirebaseAuth.getInstance().getCurrentUser();
@@ -128,15 +126,30 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
         switch (estado){
             case ESTADO4:
+                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()){
+                    entry.getKey().remove();
+                }
+                routes.clear();
+                routeSpecs.setVisibility(View.INVISIBLE);
                 startEstado2();
+                //TODO: fusionar el estado 3 y el estado 4
                 break;
             case ESTADO3:
+                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()){
+                    entry.getKey().remove();
+                }
+                routes.clear();
+                routeSpecs.setVisibility(View.INVISIBLE);
                 startEstado2();
                 break;
             case ESTADO2:
+                destinationMarker.remove();
+                destinationMarker = null;
                 startEstado1();
                 break;
             case ESTADO1:
+                originMarker.remove();
+                originMarker = null;
                 startEstado0();
                 break;
             case ESTADO0:
@@ -148,11 +161,9 @@ public class MainActivity extends AppCompatActivity
         switch (estado) {
             case ESTADO1:
                 autocompleteFragment.setOnPlaceSelectedListener( new PlaceSelection(originMarker));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(originMarker.getPosition(),12));
                 break;
             case ESTADO2:
                 autocompleteFragment.setOnPlaceSelectedListener( new PlaceSelection(destinationMarker));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destinationMarker.getPosition(),12));
                 break;
         }
 
@@ -232,7 +243,7 @@ public class MainActivity extends AppCompatActivity
 
     public void startEstado0(){
         this.estado = Estados.ESTADO0;
-        search_card_view = (CardView) findViewById(R.id.search_card_view);
+        routeSpecs.setVisibility(View.INVISIBLE);
         search_card_view.setVisibility(View.INVISIBLE);
         buttonNext.setText("Indicar Recogida");
         buttonNext.setOnClickListener(new View.OnClickListener(){
@@ -252,12 +263,14 @@ public class MainActivity extends AppCompatActivity
      */
     private void startEstado1(){
         estado = Estados.ESTADO1;
-        originMarker = mMap.addMarker(new MarkerOptions()
-            .position(mMap.getCameraPosition().target)
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+        routeSpecs.setVisibility(View.INVISIBLE);
+        if (originMarker == null){
+            originMarker = mMap.addMarker(new MarkerOptions()
+                .position(mMap.getCameraPosition().target)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+        }
         originMarker.setDraggable(true);
         configureAutocompleteFragment();
-        requestTravelfab.setVisibility(View.INVISIBLE);
         buttonNext.setVisibility(View.GONE);
         buttonNext.setText("Indicar Destino");
         buttonNext.setVisibility(View.VISIBLE);
@@ -275,10 +288,13 @@ public class MainActivity extends AppCompatActivity
 
     public void startEstado2(){
         estado = Estados.ESTADO2;
+        routeSpecs.setVisibility(View.INVISIBLE);
         originMarker.setDraggable(false);
-        destinationMarker = mMap.addMarker(new MarkerOptions()
-            .position(mMap.getCameraPosition().target)
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
+        if (destinationMarker == null){
+            destinationMarker = mMap.addMarker(new MarkerOptions()
+                .position(mMap.getCameraPosition().target)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
+        }
         destinationMarker.setDraggable(true);
         autocompleteFragment.setText("");
         configureAutocompleteFragment();
@@ -336,9 +352,9 @@ public class MainActivity extends AppCompatActivity
         this.estado = Estados.ESTADO4;
         String pllne = "dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E";
         routes.put(drawRoute(pllne),new RouteDetails("5km","30min","100$"));
-        buttonNext.setVisibility(View.GONE);
+
+        routeSpecs.setVisibility(View.VISIBLE);
         buttonNext.setText("Solicitar Viaje");
-        buttonNext.setVisibility(View.VISIBLE);
 
         buttonNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -377,13 +393,13 @@ public class MainActivity extends AppCompatActivity
      * @param encodedPath: codigo de camino recibido del app server
      * @return polyLine.ID
      */
-    private String drawRoute(String encodedPath){
+    private Polyline drawRoute(String encodedPath){
         List<LatLng> list = PolyUtil.decode(encodedPath);
         PolylineOptions ruta = new PolylineOptions();
         ruta.addAll(list);
         Polyline polyline = mMap.addPolyline(ruta);
         polyline.setClickable(true);
-        return polyline.getId();
+        return polyline;
     }
 
     private class RouteDetails{
