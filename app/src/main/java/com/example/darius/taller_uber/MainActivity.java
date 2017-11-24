@@ -1,5 +1,7 @@
 package com.example.darius.taller_uber;
 
+import android.*;
+import android.Manifest;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -78,6 +80,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
 
+    protected static final int REQUEST_CHECK_SETTINGS = 0x1;
+
     private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity
 
     private Estados estado;
     private GoogleMap mMap;
+    private Marker pruebaMarker = null;
     private Marker originMarker = null;
     private Marker destinationMarker = null;
     private CardView search_card_view;
@@ -137,37 +142,17 @@ public class MainActivity extends AppCompatActivity
         this.user = FirebaseAuth.getInstance().getCurrentUser();
         this.queue = Volley.newRequestQueue(this);
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mFusedLocationClient.getLastLocation()
-            .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    // Got last known location. In some rare situations this can be null.
-                    if (location != null) {
-                        // Logic to handle location object
-                    }
-                }
-            });
         configure_location_settings();
+//        set_on_location_listener();
 
         startEstado0();
     }
 
     @Override
     public void onBackPressed() {
-        switch (estado){
+        switch (estado) {
             case ESTADO3:
-                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()){
+                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()) {
                     entry.getKey().remove();
                 }
                 routes.clear();
@@ -189,20 +174,20 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void configureAutocompleteFragment(){
+    private void configureAutocompleteFragment() {
         switch (estado) {
             case ESTADO1:
-                autocompleteFragment.setOnPlaceSelectedListener( new PlaceSelection(originMarker));
+                autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelection(originMarker));
                 break;
             case ESTADO2:
-                autocompleteFragment.setOnPlaceSelectedListener( new PlaceSelection(destinationMarker));
+                autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelection(destinationMarker));
                 break;
         }
 
     }
 
-    private void setMarker(){
-        switch (estado){
+    private void setMarker() {
+        switch (estado) {
             case ESTADO1:
                 originMarker.setPosition(place.getLatLng());
                 break;
@@ -217,8 +202,8 @@ public class MainActivity extends AppCompatActivity
         mMap = googleMap;
         // Me posiciono sobre Buenos Aires
         LatLng bsas = new LatLng(-34.599722, -58.381944);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas,12));
-        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener(){
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas, 12));
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             public void onPolylineClick(Polyline polyline) {
                 showRoadDetails(polyline);
             }
@@ -262,7 +247,7 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
-        } else if (id == R.id.logout){
+        } else if (id == R.id.logout) {
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
@@ -273,12 +258,12 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void startEstado0(){
+    public void startEstado0() {
         this.estado = Estados.ESTADO0;
         routeSpecs.setVisibility(View.INVISIBLE);
         search_card_view.setVisibility(View.INVISIBLE);
         buttonNext.setText("Indicar Recogida");
-        buttonNext.setOnClickListener(new View.OnClickListener(){
+        buttonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startEstado1();
@@ -293,10 +278,10 @@ public class MainActivity extends AppCompatActivity
      * También puede droppear un pin sobre una posicion en el mapa.
      * También puede apretar un botón que dropea el pin en la posicion actual del usuario.
      */
-    private void startEstado1(){
+    private void startEstado1() {
         estado = Estados.ESTADO1;
         routeSpecs.setVisibility(View.INVISIBLE);
-        if (originMarker == null){
+        if (originMarker == null) {
             originMarker = mMap.addMarker(new MarkerOptions()
                 .position(mMap.getCameraPosition().target)
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
@@ -318,11 +303,11 @@ public class MainActivity extends AppCompatActivity
         search_card_view.setVisibility(View.VISIBLE);
     }
 
-    public void startEstado2(){
+    public void startEstado2() {
         estado = Estados.ESTADO2;
         routeSpecs.setVisibility(View.INVISIBLE);
         originMarker.setDraggable(false);
-        if (destinationMarker == null){
+        if (destinationMarker == null) {
             destinationMarker = mMap.addMarker(new MarkerOptions()
                 .position(mMap.getCameraPosition().target)
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
@@ -348,40 +333,40 @@ public class MainActivity extends AppCompatActivity
      * Le hace el request al servidor para recibir los caminos y los precios
      * e inicia el estado 3.
      */
-    public void requestRoute(){
+    public void requestRoute() {
         estado = Estados.ESTADO3;
         destinationMarker.setDraggable(false);
         search_card_view.setVisibility(View.GONE);
-        Comunicador comunicador = new Comunicador(user,this);
+        Comunicador comunicador = new Comunicador(user, this);
         JSONObject from_to = new JSONObject();
         String from = originMarker.getPosition().toString();
-        from = from.substring(10,from.length()-1);
+        from = from.substring(10, from.length() - 1);
         String to = destinationMarker.getPosition().toString();
-        to = to.substring(10,to.length()-1);
+        to = to.substring(10, to.length() - 1);
         try {
-            from_to.put("from",from);
-            from_to.put("to",to);
+            from_to.put("from", from);
+            from_to.put("to", to);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        class onRequestSuccess extends RequestHandler{
+        class onRequestSuccess extends RequestHandler {
             @Override
-            public void run(){
+            public void run() {
                 startEstado3(jsonRecv);
             }
         }
 
-        class onRequestFailure extends RequestHandler{
+        class onRequestFailure extends RequestHandler {
             @Override
-            public void run(){
+            public void run() {
                 //TODO mostrar mensaje de error
                 startEstado0();
             }
         }
 
         comunicador.requestAuthenticated(new onRequestSuccess(),
-            new onRequestFailure(), url_trip, from_to,Request.Method.POST);
+            new onRequestFailure(), url_trip, from_to, Request.Method.POST);
     }
 
     /**
@@ -391,7 +376,7 @@ public class MainActivity extends AppCompatActivity
      * El boton pasa a ser boton para solicitar el viaje.
      * @param routeDetails: respuesta al request hecho al APP en requestRoute
      */
-    public void startEstado3(JSONObject routeDetails){
+    public void startEstado3(JSONObject routeDetails) {
         try {
             this.estado = Estados.ESTADO3;
             buttonNext.setText("Solicitar Viaje");
@@ -413,11 +398,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void startEstado3prueba(){
+    public void startEstado3prueba() {
         //TODO borrar esto
         this.estado = Estados.ESTADO3;
         String pllne = "dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E";
-        routes.put(drawRoute(pllne),new RouteDetails("5km","30min","100$"));
+        routes.put(drawRoute(pllne), new RouteDetails("5km", "30min", "100$"));
 
         routeSpecs.setVisibility(View.VISIBLE);
         buttonNext.setText("Solicitar Viaje");
@@ -430,7 +415,7 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void showRoadDetails(Polyline polyline){
+    private void showRoadDetails(Polyline polyline) {
         RouteDetails details = routes.get(polyline);
         distancia.setText(details.distancia);
         duracion.setText(details.duracion);
@@ -444,7 +429,7 @@ public class MainActivity extends AppCompatActivity
      * @param encodedPath: codigo de camino recibido del app server
      * @return polyLine.ID
      */
-    private Polyline drawRoute(String encodedPath){
+    private Polyline drawRoute(String encodedPath) {
         List<LatLng> list = PolyUtil.decode(encodedPath);
         PolylineOptions ruta = new PolylineOptions();
         ruta.addAll(list);
@@ -453,9 +438,9 @@ public class MainActivity extends AppCompatActivity
         return polyline;
     }
 
-    private class RouteDetails{
+    private class RouteDetails {
 
-        RouteDetails(String distancia, String duracion, String costo){
+        RouteDetails(String distancia, String duracion, String costo) {
             this.distancia = distancia;
             this.duracion = duracion;
             this.costo = costo;
@@ -466,8 +451,10 @@ public class MainActivity extends AppCompatActivity
         public String costo;
     }
 
-    public void configure_location_settings(){
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+    public void configure_location_settings() {
+        LocationRequest mLocationRequest = new LocationRequest();
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+            .addLocationRequest(mLocationRequest);
         SettingsClient client = LocationServices.getSettingsClient(this);
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
         task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
@@ -476,6 +463,7 @@ public class MainActivity extends AppCompatActivity
                 // All location settings are satisfied. The client can initialize
                 // location requests here.
                 // ...
+                set_on_location_listener();
             }
         });
 
@@ -491,7 +479,9 @@ public class MainActivity extends AppCompatActivity
                             // Show the dialog by calling startResolutionForResult(),
                             // and check the result in onActivityResult().
                             ResolvableApiException resolvable = (ResolvableApiException) e;
-                            resolvable.startResolutionForResult(MainActivity.this, 1);
+                            resolvable.startResolutionForResult(MainActivity.this,
+                                REQUEST_CHECK_SETTINGS);
+                            set_on_location_listener();
                         } catch (IntentSender.SendIntentException sendEx) {
                             // Ignore the error.
                         }
@@ -503,5 +493,37 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+    }
+
+    public void set_on_location_listener(){
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            return;
+        }
+        mFusedLocationClient.getLastLocation()
+            .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    // Got last known location. In some rare situations this can be null.
+                    if (location != null) {
+                        LatLng pos = new LatLng(location.getLatitude(),location.getLongitude());
+                        if (pruebaMarker == null) {
+                            pruebaMarker = mMap.addMarker(new MarkerOptions()
+                                .position(pos));
+                        }
+                        // Logic to handle location object
+                    }
+                }
+            });
     }
 }
