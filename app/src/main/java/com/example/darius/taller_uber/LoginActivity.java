@@ -62,7 +62,7 @@ import java.util.concurrent.Callable;
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor>, URL_local {
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "LoginActivity";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
@@ -270,14 +270,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
+        // Chequeo de formato para contraseña.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
 
-        // Check for a valid email address.
+        // Chequeo de formato para email.
         if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
@@ -309,13 +309,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         }
                     }
                 });
-        }
-
-        if (mAuth.getCurrentUser() == null) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
+        } else {
+            // Error de formato. Se va al campo que falló.
             focusView.requestFocus();
         }
+
     }
 
     @Override
