@@ -39,7 +39,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -89,7 +88,7 @@ public class MainActivity extends AppCompatActivity
 
     private Estados estado;
     private GoogleMap mMap;
-    private Marker clientMarker = null;
+    private Marker user_location_marker = null;
     private Marker originMarker = null;
     private Marker destinationMarker = null;
     private CardView search_card_view;
@@ -149,21 +148,18 @@ public class MainActivity extends AppCompatActivity
 
         //Location
         configure_location_settings();
-        set_on_location_listener();
+//        set_on_location_listener();
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    // Update UI with location data
-                    // ...
                     draw_client_position(location);
-//                    set_on_location_listener();
                 }
             }
         };
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setFastestInterval(3000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         startEstado0();
@@ -436,6 +432,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void configure_location_settings() {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest mLocationRequest = new LocationRequest();
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
             .addLocationRequest(mLocationRequest);
@@ -482,47 +479,15 @@ public class MainActivity extends AppCompatActivity
     public void draw_client_position(Location location){
         if (location != null) {
             LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
-            if (clientMarker == null) {
-                clientMarker = mMap.addMarker(new MarkerOptions()
-                    .position(pos));
+            if (user_location_marker == null) {
+                user_location_marker = mMap.addMarker(new MarkerOptions()
+                    .position(pos)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_location)));
             } else {
-                mMap.addMarker(new MarkerOptions().position(pos));
-                clientMarker.setPosition(pos);
+                user_location_marker.setPosition(pos);
             }
             // Logic to handle location object
         }
-    }
-
-    public void set_on_location_listener() {
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
-            return;
-        }
-        mFusedLocationClient.getLastLocation()
-            .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    // Got last known location. In some rare situations this can be null.
-                    if (location != null) {
-                        LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
-                        if (clientMarker == null) {
-                            clientMarker = mMap.addMarker(new MarkerOptions()
-                                .position(pos));
-                        }
-                        // Logic to handle location object
-                    }
-                }
-            });
     }
 
     @Override
