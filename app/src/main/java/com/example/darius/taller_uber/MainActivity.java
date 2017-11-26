@@ -1,6 +1,5 @@
 package com.example.darius.taller_uber;
 
-import android.*;
 import android.Manifest;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -8,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.CardView;
 import android.view.View;
@@ -33,7 +31,9 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
@@ -58,7 +58,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.maps.android.PolyUtil;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -81,6 +80,7 @@ public class MainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
 
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
+    protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
     private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity
 
     private Estados estado;
     private GoogleMap mMap;
-    private Marker pruebaMarker = null;
+    private Marker clientMarker = null;
     private Marker originMarker = null;
     private Marker destinationMarker = null;
     private CardView search_card_view;
@@ -101,8 +101,13 @@ public class MainActivity extends AppCompatActivity
     private FusedLocationProviderClient mFusedLocationClient;
     private Map<Polyline, RouteDetails> routes;
 
+    //Location
+    boolean mRequestingLocationUpdates = false;
+    private LocationCallback mLocationCallback;
+    private LocationRequest mLocationRequest;
+
+
     PlaceAutocompleteFragment autocompleteFragment;
-    Place place;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,8 +147,24 @@ public class MainActivity extends AppCompatActivity
         this.user = FirebaseAuth.getInstance().getCurrentUser();
         this.queue = Volley.newRequestQueue(this);
 
+        //Location
         configure_location_settings();
-//        set_on_location_listener();
+        set_on_location_listener();
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with location data
+                    // ...
+                    draw_client_position(location);
+//                    set_on_location_listener();
+                }
+            }
+        };
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         startEstado0();
     }
@@ -184,17 +205,6 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
 
-    }
-
-    private void setMarker() {
-        switch (estado) {
-            case ESTADO1:
-                originMarker.setPosition(place.getLatLng());
-                break;
-            case ESTADO2:
-                destinationMarker.setPosition(place.getLatLng());
-                break;
-        }
     }
 
     @Override
@@ -384,35 +394,9 @@ public class MainActivity extends AppCompatActivity
                 new RouteDetails(routeDetails.getString("distance"),
                     routeDetails.getString("time"),
                     routeDetails.getString("cost")));
-            /*JSONArray jsonArray = jsonObject.getJSONArray("").getJSONArray(0);
-            for(int i = 0; i < jsonArray.length(); i++){
-                JSONObject json = jsonArray.getJSONObject(i);
-                routes.put(drawRoute(json.getString("polyline")),
-                    new RouteDetails(json.getString("km"),
-                        json.getString("time"),
-                        json.getString("costo")));
-
-            }*/
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
-
-    public void startEstado3prueba() {
-        //TODO borrar esto
-        this.estado = Estados.ESTADO3;
-        String pllne = "dihrEtnjcJnC??YMaHEeGKyJ?wA{KLoFJu@JcBD}@BqMHmER{EF{BH}BB_FL_LVkAF[EsAg@s@Gg@@}BHe@Jy@^WHQDkFD_FJ{MZcCFaBRyAHkCL_ABcEFyA?aEIkESo@CgCAmBIeBOyAUoAWuEqAaBi@kCiAoEqBu@Qe@I}@I{@@s@FaAT_A`@{@j@aAfAk@x@m@dAqBtEkDdIeBlE_BlE}AdEqApCc@|@cAhBu@lAqAjBoCtD_BdBWPuBpAcBpAeA`AW\\k@~@i@jAw@`C]jBc@tDYzAUt@m@|AqBdF]t@kAdCcFvLkC`GiBrD_@j@oAxBwFpJ_@Ng@NQB_@A_@GWK{@k@QGYGaAfCUt@Ir@@z@BXLn@Zr@T^|BlBvD~CjA|@HJDVHFlAlArH`HLHZj@f@fAVZNJp@RPJxAfAHFXHpH|Gn@l@@J\\p@j@lA?B@J@LLVRLV@PGh@LhAb@fGxFHTPTd@d@vF`FxCpCjGzFNTJV@JCNGZEd@H~@JRPVJFVDR@@E";
-        routes.put(drawRoute(pllne), new RouteDetails("5km", "30min", "100$"));
-
-        routeSpecs.setVisibility(View.VISIBLE);
-        buttonNext.setText("Solicitar Viaje");
-
-        buttonNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //TODO logica de solicitud de viaje
-            }
-        });
     }
 
     private void showRoadDetails(Polyline polyline) {
@@ -463,7 +447,7 @@ public class MainActivity extends AppCompatActivity
                 // All location settings are satisfied. The client can initialize
                 // location requests here.
                 // ...
-                set_on_location_listener();
+//                set_on_location_listener();
             }
         });
 
@@ -481,7 +465,7 @@ public class MainActivity extends AppCompatActivity
                             ResolvableApiException resolvable = (ResolvableApiException) e;
                             resolvable.startResolutionForResult(MainActivity.this,
                                 REQUEST_CHECK_SETTINGS);
-                            set_on_location_listener();
+                            mRequestingLocationUpdates = true;
                         } catch (IntentSender.SendIntentException sendEx) {
                             // Ignore the error.
                         }
@@ -495,11 +479,25 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    public void set_on_location_listener(){
+    public void draw_client_position(Location location){
+        if (location != null) {
+            LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
+            if (clientMarker == null) {
+                clientMarker = mMap.addMarker(new MarkerOptions()
+                    .position(pos));
+            } else {
+                mMap.addMarker(new MarkerOptions().position(pos));
+                clientMarker.setPosition(pos);
+            }
+            // Logic to handle location object
+        }
+    }
+
+    public void set_on_location_listener() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -516,14 +514,65 @@ public class MainActivity extends AppCompatActivity
                 public void onSuccess(Location location) {
                     // Got last known location. In some rare situations this can be null.
                     if (location != null) {
-                        LatLng pos = new LatLng(location.getLatitude(),location.getLongitude());
-                        if (pruebaMarker == null) {
-                            pruebaMarker = mMap.addMarker(new MarkerOptions()
+                        LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
+                        if (clientMarker == null) {
+                            clientMarker = mMap.addMarker(new MarkerOptions()
                                 .position(pos));
                         }
                         // Logic to handle location object
                     }
                 }
             });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
+            mRequestingLocationUpdates);
+        // ...
+        super.onSaveInstanceState(outState);
+    }
+
+    private void updateValuesFromBundle(Bundle savedInstanceState) {
+        // Update the value of mRequestingLocationUpdates from the Bundle.
+        if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
+            mRequestingLocationUpdates = savedInstanceState.getBoolean(
+                REQUESTING_LOCATION_UPDATES_KEY);
+        }
+
+    }
+    private void stopLocationUpdates() {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+    }
+
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+            mLocationCallback,null);
+
     }
 }
