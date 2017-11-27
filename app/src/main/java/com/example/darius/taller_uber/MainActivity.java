@@ -55,6 +55,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.maps.android.PolyUtil;
 
 import org.json.JSONException;
@@ -105,6 +107,8 @@ public class MainActivity extends AppCompatActivity
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
 
+    //Firebase Database
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
 
     PlaceAutocompleteFragment autocompleteFragment;
 
@@ -148,12 +152,12 @@ public class MainActivity extends AppCompatActivity
 
         //Location
         configure_location_settings();
-//        set_on_location_listener();
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     draw_client_position(location);
+                    push_user_position_to_database();
                 }
             }
         };
@@ -441,10 +445,7 @@ public class MainActivity extends AppCompatActivity
         task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
             @Override
             public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                // All location settings are satisfied. The client can initialize
-                // location requests here.
-                // ...
-//                set_on_location_listener();
+
             }
         });
 
@@ -462,7 +463,6 @@ public class MainActivity extends AppCompatActivity
                             ResolvableApiException resolvable = (ResolvableApiException) e;
                             resolvable.startResolutionForResult(MainActivity.this,
                                 REQUEST_CHECK_SETTINGS);
-                            mRequestingLocationUpdates = true;
                         } catch (IntentSender.SendIntentException sendEx) {
                             // Ignore the error.
                         }
@@ -520,6 +520,7 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+
     private void stopLocationUpdates() {
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
@@ -539,5 +540,11 @@ public class MainActivity extends AppCompatActivity
         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
             mLocationCallback,null);
 
+    }
+
+    private void push_user_position_to_database(){
+        DatabaseReference myRef;
+        myRef = database.getReference(this.user.getUid());
+        myRef.setValue(user_location_marker.getPosition().toString());
     }
 }

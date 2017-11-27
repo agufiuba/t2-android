@@ -180,7 +180,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     Log.d(TAG, "facebook:onRequestSequencesSuccess:" + loginResult);
                     token = loginResult.getAccessToken();
                     handleFacebookAccessToken(token);
-//                    startMainActivity();
                 }
 
                 @Override
@@ -219,7 +218,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             .setDisplayName(profile.getName())
                             .build();
                         user.updateProfile(profileUpdates);
-//                        startMainActivity();
                         attempt_loginwith_appserver(user);
                         /*
                         Acá la logica seria preguntarle al servidor si el usuario esta registrado
@@ -241,7 +239,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     public void onStart() {
         super.onStart();
-//        startMainActivity();
         mAuth.addAuthStateListener(mAuthListener);
         this.user = mAuth.getCurrentUser();
         updateUI(user);
