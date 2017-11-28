@@ -24,9 +24,8 @@ public class SignUpActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         load_layout_elements();
         configure_layout_elements();
-        FirebaseAuth.getInstance().signOut();
     }
-
+    
     /**
      * load_layout_elements
      * Carga los elementos de la interfaz y los asocia a un atributo.

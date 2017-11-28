@@ -55,6 +55,7 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
             fb_register = true;
             load_registration_through_facebook();
         }
+
         queue = Volley.newRequestQueue(this);
     }
 

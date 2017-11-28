@@ -84,12 +84,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        FirebaseAuth.getInstance().signOut();
         setContentView(R.layout.activity_login);
         callbackManager = CallbackManager.Factory.create();
         load_layout_elements();
         configureFaceBook();
         configureFaceBookButton(callbackManager, fbLoginButton);
         LoginManager.getInstance().logOut();
+
         configurePasswordField();
         configureSignInButton();
         configureFireBase();
@@ -157,8 +159,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void configureFaceBook() {
         try {
             PackageInfo info = getPackageManager().getPackageInfo(
-                "com.example.darius.taller_uber",
-                PackageManager.GET_SIGNATURES);
+                    "com.example.darius.taller_uber",
+                    PackageManager.GET_SIGNATURES);
             for (Signature signature : info.signatures) {
                 MessageDigest md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
@@ -175,25 +177,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                          LoginButton fbLoginButton) {
         fbLoginButton.setReadPermissions(Arrays.asList("public_profile", "email"));
         fbLoginButton.registerCallback(callbackManager,
-            new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    AccessToken token;
-                    Log.d(TAG, "facebook:onRequestSequencesSuccess:" + loginResult);
-                    token = loginResult.getAccessToken();
-                    handleFacebookAccessToken(token);
-                }
+                new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResult) {
+                        AccessToken token;
+                        Log.d(TAG, "facebook:onRequestSequencesSuccess:" + loginResult);
+                        token = loginResult.getAccessToken();
+                        handleFacebookAccessToken(token);
+                    }
 
-                @Override
-                public void onCancel() {
-                    Log.d(TAG, "facebook:onCancel");
-                }
+                    @Override
+                    public void onCancel() {
+                        Log.d(TAG, "facebook:onCancel");
+                    }
 
-                @Override
-                public void onError(FacebookException e) {
-                    Log.d(TAG, "facebook:onRequestSequencesError", e);
-                }
-            });
+                    @Override
+                    public void onError(FacebookException e) {
+                        Log.d(TAG, "facebook:onRequestSequencesError", e);
+                    }
+                });
     }
 
     @Override
@@ -208,34 +210,39 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
 
         mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-                        // Actualizar el usuario.
-                        Log.d(TAG, "signInWithCredential:success");
-                        user = mAuth.getCurrentUser();
-                        profile = Profile.getCurrentProfile();
-                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                            .setDisplayName(profile.getName())
-                            .build();
-                        user.updateProfile(profileUpdates);
-                        attempt_loginwith_appserver(user);
-                        /*
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Actualizar el usuario.
+                            Log.d(TAG, "signInWithCredential:success");
+                            user = mAuth.getCurrentUser();
+                            profile = Profile.getCurrentProfile();
+                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                    .setDisplayName(profile.getName())
+                                    .build();
+                            user.updateProfile(profileUpdates).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                /*
                         Acá la logica seria preguntarle al servidor si el usuario esta registrado
                         En caso de no estarlo, mandarlo a la pantalla de registro
                         En caso de estarlo, iniciar la pantalla principal
                          */
+                                    attempt_loginwith_appserver(user);
+                                }
+                            });
 
-                    } else {
-                        // Mostrar mensaje en caso de fallo
-                        Log.w(TAG, "signInWithCredential:failure", task.getException());
-                        Toast.makeText(LoginActivity.this, "Authentication failed.",
-                            Toast.LENGTH_SHORT).show();
-                        updateUI(null);
+
+                        } else {
+                            // Mostrar mensaje en caso de fallo
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                            updateUI(null);
+                        }
                     }
-                }
-            });
+                });
     }
 
     @Override
@@ -247,7 +254,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void updateUI(FirebaseUser user) {
-        if (user != null && user_is_logged_in){
+        if (user != null && user_is_logged_in) {
             startMainActivity();
         }
     }
@@ -289,25 +296,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         if (!cancel) {
             mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
 
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "attemptLoginWithEmail: success");
-                            user = mAuth.getCurrentUser();
-                            attempt_loginwith_appserver(user);
-                        } else {
-                            Log.w(TAG, "signInWithEmail:failed", task.getException());
-                            Toast.makeText(LoginActivity.this, R.string.auth_failed,
-                                Toast.LENGTH_SHORT).show();
+                            // If sign in fails, display a message to the user. If sign in succeeds
+                            // the auth state listener will be notified and logic to handle the
+                            // signed in user can be handled in the listener.
+                            if (task.isSuccessful()) {
+                                Log.d(TAG, "attemptLoginWithEmail: success");
+                                user = mAuth.getCurrentUser();
+                                attempt_loginwith_appserver(user);
+                            } else {
+                                Log.w(TAG, "signInWithEmail:failed", task.getException());
+                                Toast.makeText(LoginActivity.this, R.string.auth_failed,
+                                        Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
+                    });
         }
     }
 
@@ -327,6 +334,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * PRE: El usuario ya está conectado en firebase.
      * POST: En caso de estar registrado se inicia la pantalla principal
      * o en caso contrario de inicia la pantalla de registro.
+     *
      * @param user: user de Firebase
      */
     private void attempt_loginwith_appserver(final FirebaseUser user) {
@@ -357,11 +365,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         public void run() {
             user_is_logged_in = false;
-            if (this.volleyError.networkResponse == null){
+            if (this.volleyError.networkResponse == null) {
                 displayErrorMessage("Error de conexión con el servidor");
             } else {
                 int statusCode = this.volleyError.networkResponse.statusCode;
-                if (statusCode == 400){
+                if (statusCode == 400) {
                     displayErrorMessage("El usuario no está registrado");
                     startRegisterActivity();
                 } else {
@@ -371,7 +379,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    private void displayErrorMessage(String mensajeDeError){
+    private void displayErrorMessage(String mensajeDeError) {
         Snackbar.make(this.mLoginFormView, mensajeDeError, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
     }
@@ -381,13 +389,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Envía al appserver el token de usuario de firebase.
      * Inicia la pantalla de registro si se recibe un codigo 400
      * o inicia la pantalla principal si el codigo recibido es 200.
+     *
      * @param token: token de usuario de firebase
      */
-    private void post_user_token(final String token){
-        Comunicador comunicador = new Comunicador(user,this);
+    private void post_user_token(final String token) {
+        Comunicador comunicador = new Comunicador(user, this);
         final JSONObject params = new JSONObject();
         comunicador.requestAuthenticated(new onTokenPostSuccess(),
-            new onTokenPostFailure(), url_login, params, Request.Method.POST);
+                new onTokenPostFailure(), url_login, params, Request.Method.POST);
     }
 
     private boolean isEmailValid(String email) {
@@ -402,7 +411,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("Client Type",this.client_type);
+        intent.putExtra("Client Type", this.client_type);
         startActivity(intent);
     }
 
@@ -414,18 +423,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return new CursorLoader(this,
-            // Retrieve data rows for the device user's 'profile' contact.
-            Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-                ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
+                // Retrieve data rows for the device user's 'profile' contact.
+                Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
+                        ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
 
-            // Select only email addresses.
-            ContactsContract.Contacts.Data.MIMETYPE +
-                " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-            .CONTENT_ITEM_TYPE},
+                // Select only email addresses.
+                ContactsContract.Contacts.Data.MIMETYPE +
+                        " = ?", new String[]{ContactsContract.CommonDataKinds.Email
+                .CONTENT_ITEM_TYPE},
 
-            // Show primary email addresses first. Note that there won't be
-            // a primary email address if the user hasn't specified one.
-            ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
+                // Show primary email addresses first. Note that there won't be
+                // a primary email address if the user hasn't specified one.
+                ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
     }
 
     @Override
@@ -448,8 +457,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
-            new ArrayAdapter<>(LoginActivity.this,
-                android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
+                new ArrayAdapter<>(LoginActivity.this,
+                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
 
         mEmailView.setAdapter(adapter);
     }
@@ -457,8 +466,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private interface ProfileQuery {
         String[] PROJECTION = {
-            ContactsContract.CommonDataKinds.Email.ADDRESS,
-            ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
+                ContactsContract.CommonDataKinds.Email.ADDRESS,
+                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
         };
 
         int ADDRESS = 0;
