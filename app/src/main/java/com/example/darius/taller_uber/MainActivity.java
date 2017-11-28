@@ -56,14 +56,18 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.PolyUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +83,7 @@ import java.util.Map;
  */
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
 
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
@@ -103,6 +107,7 @@ public class MainActivity extends AppCompatActivity
     private TextView distancia, duracion, costo;
     private FusedLocationProviderClient mFusedLocationClient;
     private Map<Polyline, RouteDetails> routes;
+    private Map<String, Marker> drivers;
 
     //Location
     boolean mRequestingLocationUpdates = false;
@@ -129,17 +134,17 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         autocompleteFragment = (PlaceAutocompleteFragment)
-            getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-            .findFragmentById(R.id.map);
+                .findFragmentById(R.id.map);
 
         routes = new HashMap<Polyline, RouteDetails>();
         routeSpecs = (LinearLayout) findViewById(R.id.routeSpecs);
@@ -169,7 +174,7 @@ public class MainActivity extends AppCompatActivity
         mLocationRequest.setFastestInterval(3000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        if (client_type.equals("passenger")){
+        if (client_type.equals("passenger")) {
             startEstado0();
         } else {
             startEstado0_Driver();
@@ -302,8 +307,8 @@ public class MainActivity extends AppCompatActivity
         routeSpecs.setVisibility(View.INVISIBLE);
         if (originMarker == null) {
             originMarker = mMap.addMarker(new MarkerOptions()
-                .position(mMap.getCameraPosition().target)
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+                    .position(mMap.getCameraPosition().target)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
         }
         originMarker.setDraggable(true);
         configureAutocompleteFragment();
@@ -328,8 +333,8 @@ public class MainActivity extends AppCompatActivity
         originMarker.setDraggable(false);
         if (destinationMarker == null) {
             destinationMarker = mMap.addMarker(new MarkerOptions()
-                .position(mMap.getCameraPosition().target)
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
+                    .position(mMap.getCameraPosition().target)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
         }
         destinationMarker.setDraggable(true);
         autocompleteFragment.setText("");
@@ -385,17 +390,19 @@ public class MainActivity extends AppCompatActivity
         }
 
         comunicador.requestAuthenticated(new onRequestSuccess(),
-            new onRequestFailure(), url_trip, from_to, Request.Method.POST);
+                new onRequestFailure(), url_trip, from_to, Request.Method.POST);
     }
 
-    public void startEstado0_Driver(){
+    public void startEstado0_Driver() {
 
     }
+
     /**
      * startEstado3
      * Habiendose recibido el json con la ruta y los detalles de la ruta,
      * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
      * El boton pasa a ser boton para solicitar el viaje.
+     *
      * @param routeDetails: respuesta al request hecho al APP en requestRoute
      */
     public void startEstado3(JSONObject routeDetails) {
@@ -403,9 +410,9 @@ public class MainActivity extends AppCompatActivity
             this.estado = Estados.ESTADO3;
             buttonNext.setText("Solicitar Viaje");
             routes.put(drawRoute(routeDetails.getString("points")),
-                new RouteDetails(routeDetails.getString("distance"),
-                    routeDetails.getString("time"),
-                    routeDetails.getString("cost")));
+                    new RouteDetails(routeDetails.getString("distance"),
+                            routeDetails.getString("time"),
+                            routeDetails.getString("cost")));
             buttonNext.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -418,11 +425,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void startEstado4(){
+    private void startEstado4() {
         this.estado = Estados.ESTADO4;
         routeSpecs.setVisibility(View.GONE);
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
-            public void onPolylineClick(Polyline polyline) {}
+            public void onPolylineClick(Polyline polyline) {
+            }
         });
 //        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
 //        car_specs.setVisibility(View.VISIBLE);
@@ -448,8 +456,41 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void displayAvailableDrivers(JSONObject app_response){
+    private void displayAvailableDrivers(final JSONObject app_response) {
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (app_response.has(dataSnapshot.getKey())) {
+                    show_driver_position(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
+                }
+            }
 
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+    }
+
+    /**
+     * show_driver_position
+     * @param key: userID de la database
+     * @param value: valor de la posicion asociada.
+     *               Ej: lat/lng: (-34.6231222,-58.3836347)
+     */
+    private void show_driver_position(String key, String value) {
+        value = value.substring(10, value.length() - 1);
+        LatLng latLng = new LatLng(
+                Double.parseDouble(value.substring(10, 21)),
+                Double.parseDouble(value.substring(22, 32)));
+        if (drivers.containsKey(key)){
+            drivers.get(key).setPosition(latLng);
+        } else {
+            Marker driverMarker = mMap.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
+            drivers.put(key, driverMarker);
+        }
     }
 
     private void showRoadDetails(Polyline polyline) {
@@ -466,6 +507,7 @@ public class MainActivity extends AppCompatActivity
     /**
      * drawRoute
      * Dibuja la ruta codificada recibida del app server. Devuelve la id de la ruta.
+     *
      * @param encodedPath: codigo de camino recibido del app server
      * @return polyLine.ID
      */
@@ -495,7 +537,7 @@ public class MainActivity extends AppCompatActivity
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest mLocationRequest = new LocationRequest();
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-            .addLocationRequest(mLocationRequest);
+                .addLocationRequest(mLocationRequest);
         SettingsClient client = LocationServices.getSettingsClient(this);
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
         task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
@@ -518,7 +560,7 @@ public class MainActivity extends AppCompatActivity
                             // and check the result in onActivityResult().
                             ResolvableApiException resolvable = (ResolvableApiException) e;
                             resolvable.startResolutionForResult(MainActivity.this,
-                                REQUEST_CHECK_SETTINGS);
+                                    REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException sendEx) {
                             // Ignore the error.
                         }
@@ -532,13 +574,13 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    public void draw_client_position(Location location){
+    public void draw_client_position(Location location) {
         if (location != null) {
             LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
             if (user_location_marker == null) {
                 user_location_marker = mMap.addMarker(new MarkerOptions()
-                    .position(pos)
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_location)));
+                        .position(pos)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_location)));
             } else {
                 user_location_marker.setPosition(pos);
             }
@@ -563,7 +605,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
-            mRequestingLocationUpdates);
+                mRequestingLocationUpdates);
         // ...
         super.onSaveInstanceState(outState);
     }
@@ -572,7 +614,7 @@ public class MainActivity extends AppCompatActivity
         // Update the value of mRequestingLocationUpdates from the Bundle.
         if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
             mRequestingLocationUpdates = savedInstanceState.getBoolean(
-                REQUESTING_LOCATION_UPDATES_KEY);
+                    REQUESTING_LOCATION_UPDATES_KEY);
         }
 
     }
@@ -594,11 +636,11 @@ public class MainActivity extends AppCompatActivity
         }
 
         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-            mLocationCallback,null);
+                mLocationCallback, null);
 
     }
 
-    private void push_user_position_to_database(){
+    private void push_user_position_to_database() {
         DatabaseReference myRef;
         myRef = database.getReference(this.user.getUid());
         myRef.setValue(user_location_marker.getPosition().toString());

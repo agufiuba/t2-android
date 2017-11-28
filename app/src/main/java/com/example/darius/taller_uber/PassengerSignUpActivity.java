@@ -2,6 +2,7 @@ package com.example.darius.taller_uber;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -17,6 +18,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -26,6 +30,7 @@ import org.json.JSONObject;
 
 public class PassengerSignUpActivity extends AppCompatActivity implements URL_local {
 
+    private String TAG = "Passenger Signup Activity";
     private EditText nombre;
     private EditText apellido;
     private EditText password;
@@ -46,7 +51,7 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         configure_layout_elements();
-        if (user != null && user.getProviders().contains("facebook.com")){
+        if (user != null && user.getProviders().contains("facebook.com")) {
             fb_register = true;
             load_registration_through_facebook();
         }
@@ -94,19 +99,15 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
      * En caso de éxito, desencadena la actividad de ingreso de los métodos de pago.
      */
     private void attemptRegister() {
-        if (fb_register){
+        if (fb_register) {
             goToPaymentActivity();
         } else {
-            // Reset errors.
-            email.setError(null);
-            password.setError(null);
-
             // Store values at the time of the login attempt.
-            String _email = email.getText().toString();
-            String _password = password.getText().toString();
+            final String _email = email.getText().toString();
+            final String _password = password.getText().toString();
 
             boolean cancel = false;
-            View focusView = null;
+            View focusView = email;
 
             // Check for a valid password, if the user entered one.
             if (!TextUtils.isEmpty(_password) && !isPasswordValid(_password)) {
@@ -132,24 +133,42 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
                 focusView.requestFocus();
             }
 
+            Log.d(TAG,"Before The CAncel");
             if (!cancel) {
-                mAuth.createUserWithEmailAndPassword(_email, _password);
-                mAuth.signInWithEmailAndPassword(_email, _password);
-                user = mAuth.getCurrentUser();
-                String newName = nombre.getText().toString() + " " + apellido.getText().toString();
-                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setDisplayName(newName)
-                    .build();
-                user.updateProfile(profileUpdates);
-                //TODO cambiar la actividad
-                //startActivity(new Intent(PassengerSignUpActivity.this, PaymentActivity.class));
-                //sendSignUpRequest();
-                goToPaymentActivity();
+                Log.d(TAG,"Cancel");
+                mAuth.createUserWithEmailAndPassword(_email, _password).addOnCompleteListener(
+                        new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                Log.d(TAG,"create user with email and password");
+                                mAuth.signInWithEmailAndPassword(_email, _password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<AuthResult> task) {
+                                        user = mAuth.getCurrentUser();
+                                        String newName = nombre.getText().toString() + " " + apellido.getText().toString();
+                                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                                .setDisplayName(newName)
+                                                .build();
+                                        user.updateProfile(profileUpdates).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                Log.d(TAG,"update Profile unsuccessful");
+                                                if (task.isSuccessful()) {
+                                                    Log.d(TAG,"Update Profile");
+                                                    goToPaymentActivity();
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
             }
         }
     }
 
-    private void goToPaymentActivity(){
+
+    private void goToPaymentActivity() {
         Intent intent = new Intent(PassengerSignUpActivity.this, PaymentActivity.class);
         intent.putExtra("type", "passenger");
         intent.putExtra("name", nombre.getText().toString());

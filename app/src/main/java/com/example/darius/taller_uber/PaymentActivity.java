@@ -106,7 +106,9 @@ public class PaymentActivity extends AppCompatActivity implements URL_local{
     private class onSignUpSuccess extends RequestHandler {
         @Override
         public void run() {
-            startActivity(new Intent(PaymentActivity.this, MainActivity.class));
+            Intent intent = new Intent(PaymentActivity.this, MainActivity.class);
+            intent.putExtra("Client Type","passenger");
+            startActivity(intent);
         }
     }
 
