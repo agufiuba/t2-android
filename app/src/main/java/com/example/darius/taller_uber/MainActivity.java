@@ -424,8 +424,32 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             public void onPolylineClick(Polyline polyline) {}
         });
-        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
-        car_specs.setVisibility(View.VISIBLE);
+//        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
+//        car_specs.setVisibility(View.VISIBLE);
+
+        Comunicador comunicador = new Comunicador(user, this);
+        JSONObject driversAroundRequest = new JSONObject();
+        //TODO poner headers y body para el request
+
+        class onRequestSuccess extends RequestHandler {
+            @Override
+            public void run() {
+                displayAvailableDrivers(this.jsonRecv);
+            }
+        }
+
+        class onRequestFailure extends RequestHandler {
+            @Override
+            public void run() {
+                //TODO mostrar mensaje de error
+                startEstado0();
+            }
+        }
+
+    }
+
+    private void displayAvailableDrivers(JSONObject app_response){
+
     }
 
     private void showRoadDetails(Polyline polyline) {

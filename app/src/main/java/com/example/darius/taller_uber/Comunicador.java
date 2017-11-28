@@ -70,6 +70,7 @@ public class Comunicador {
                             public void onErrorResponse(VolleyError error) {
                                 VolleyLog.e("Error: ", error.getMessage());
                                 try {
+                                    onError.setError(error);
                                     onError.run();
                                 } catch (Exception e) {
                                     Log.d(TAG, e.toString());
@@ -115,6 +116,7 @@ public class Comunicador {
                 public void onErrorResponse(VolleyError error) {
                     Log.e("Error: ", error.getMessage());
                     try {
+                        onError.setError(error);
                         onError.run();
                     } catch (Exception e) {
                         Log.d(TAG, e.toString());

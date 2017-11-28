@@ -113,7 +113,21 @@ public class PaymentActivity extends AppCompatActivity implements URL_local{
     private class onSignUpFailure extends RequestHandler {
         @Override
         public void run() {
-            //TODO implementar
+            if (this.volleyError.networkResponse == null){
+                displayErrorMessage("Error de Conexión");
+            } else {
+                int statusCode = this.volleyError.networkResponse.statusCode;
+                if (statusCode == 400){
+                    displayErrorMessage("El usuario no está registrado");
+                } else {
+                    displayErrorMessage("Error del Servidor");
+                }
+            }
         }
+    }
+
+    private void displayErrorMessage(String mensajeDeError){
+        Snackbar.make(findViewById(R.id.paymentView), mensajeDeError, Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
     }
 }

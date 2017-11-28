@@ -1,5 +1,7 @@
 package com.example.darius.taller_uber;
 
+import com.android.volley.VolleyError;
+
 import org.json.JSONObject;
 
 /**
@@ -8,6 +10,7 @@ import org.json.JSONObject;
 
 public abstract class RequestHandler implements Runnable {
     protected JSONObject jsonRecv;
+    protected VolleyError volleyError;
 
     public void run(){}
 
@@ -15,7 +18,11 @@ public abstract class RequestHandler implements Runnable {
         this.jsonRecv = json;
     }
 
+    public void setError(VolleyError volleyError){ this.volleyError = volleyError; }
+
     public JSONObject getJson(){
         return this.jsonRecv;
     }
+
+    public VolleyError getVolleyError() { return this.volleyError; }
 }

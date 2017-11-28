@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -356,8 +357,23 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         public void run() {
             user_is_logged_in = false;
-            startRegisterActivity();
+            if (this.volleyError.networkResponse == null){
+                displayErrorMessage("Error de conexión con el servidor");
+            } else {
+                int statusCode = this.volleyError.networkResponse.statusCode;
+                if (statusCode == 400){
+                    displayErrorMessage("El usuario no está registrado");
+                    startRegisterActivity();
+                } else {
+                    displayErrorMessage("Error del Servidor");
+                }
+            }
         }
+    }
+
+    private void displayErrorMessage(String mensajeDeError){
+        Snackbar.make(this.mLoginFormView, mensajeDeError, Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
     }
 
     /**
