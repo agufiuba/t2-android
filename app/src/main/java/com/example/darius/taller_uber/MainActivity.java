@@ -22,6 +22,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -83,11 +84,12 @@ public class MainActivity extends AppCompatActivity
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
-    private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3}
+    private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
     //ESTADO2: cuando el usuario puede indicar el destino del trayecto
 
+    private String client_type;
     private Estados estado;
     private GoogleMap mMap;
     private Marker user_location_marker = null;
@@ -110,16 +112,18 @@ public class MainActivity extends AppCompatActivity
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
 
+
     PlaceAutocompleteFragment autocompleteFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        client_type = getIntent().getStringExtra("Client Type");
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        buttonNext = (Button) findViewById(R.id.nextButton);
+        buttonNext = (Button) findViewById(R.id.stateButton);
 
         search_card_view = (CardView) findViewById(R.id.search_card_view);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -139,8 +143,7 @@ public class MainActivity extends AppCompatActivity
 
         routes = new HashMap<Polyline, RouteDetails>();
         routeSpecs = (LinearLayout) findViewById(R.id.routeSpecs);
-        Animation slide_up = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
-        routeSpecs.setAnimation(slide_up);
+
         distancia = (TextView) findViewById(R.id.distancia);
         duracion = (TextView) findViewById(R.id.duracion);
         costo = (TextView) findViewById(R.id.costo);
@@ -166,12 +169,18 @@ public class MainActivity extends AppCompatActivity
         mLocationRequest.setFastestInterval(3000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        startEstado0();
+        if (client_type.equals("passenger")){
+            startEstado0();
+        } else {
+            startEstado0_Driver();
+        }
     }
 
     @Override
     public void onBackPressed() {
         switch (estado) {
+            case ESTADO4:
+                break;
             case ESTADO3:
                 for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()) {
                     entry.getKey().remove();
@@ -379,6 +388,9 @@ public class MainActivity extends AppCompatActivity
             new onRequestFailure(), url_trip, from_to, Request.Method.POST);
     }
 
+    public void startEstado0_Driver(){
+
+    }
     /**
      * startEstado3
      * Habiendose recibido el json con la ruta y los detalles de la ruta,
@@ -394,9 +406,26 @@ public class MainActivity extends AppCompatActivity
                 new RouteDetails(routeDetails.getString("distance"),
                     routeDetails.getString("time"),
                     routeDetails.getString("cost")));
+            buttonNext.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startEstado4();
+                }
+            });
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private void startEstado4(){
+        this.estado = Estados.ESTADO4;
+        routeSpecs.setVisibility(View.GONE);
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+            public void onPolylineClick(Polyline polyline) {}
+        });
+        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
+        car_specs.setVisibility(View.VISIBLE);
     }
 
     private void showRoadDetails(Polyline polyline) {
@@ -404,8 +433,11 @@ public class MainActivity extends AppCompatActivity
         distancia.setText(details.distancia);
         duracion.setText(details.duracion);
         costo.setText(details.costo);
+        Animation slide_up = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
+        routeSpecs.setAnimation(slide_up);
         routeSpecs.setVisibility(View.VISIBLE);
     }
+
 
     /**
      * drawRoute

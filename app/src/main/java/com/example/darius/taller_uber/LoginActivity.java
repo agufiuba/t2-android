@@ -48,6 +48,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.security.MessageDigest;
@@ -55,7 +56,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 
 /**
@@ -77,6 +77,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private Button fb_login_button;
     private Boolean user_is_logged_in = false;
     private Profile profile;
+    private String client_type;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -307,12 +308,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     }
                 });
         }
-
-        if (mAuth.getCurrentUser() == null) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        }
     }
 
     @Override
@@ -348,7 +343,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         public void run() {
             user_is_logged_in = true;
-            startMainActivity();
+            try {
+                client_type = this.jsonRecv.getString("type");
+                startMainActivity();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -386,6 +386,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("Client Type",this.client_type);
         startActivity(intent);
     }
 
