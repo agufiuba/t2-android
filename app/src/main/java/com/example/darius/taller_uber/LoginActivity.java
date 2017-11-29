@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -196,6 +197,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         Log.d(TAG, "facebook:onRequestSequencesError", e);
                     }
                 });
+
+//        AccessTokenTracker accessTokenTracker = new AccessTokenTracker() {
+//            @Override
+//            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
+//                if(currentAccessToken == null){
+//                    mAuth.signOut();
+//                }
+//            }
+//        };
     }
 
     @Override

@@ -25,7 +25,7 @@ public class SignUpActivity extends AppCompatActivity {
         load_layout_elements();
         configure_layout_elements();
     }
-    
+
     /**
      * load_layout_elements
      * Carga los elementos de la interfaz y los asocia a un atributo.

@@ -18,6 +18,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.facebook.AccessToken;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -51,7 +52,8 @@ public class PassengerSignUpActivity extends AppCompatActivity implements URL_lo
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         configure_layout_elements();
-        if (user != null && user.getProviders().contains("facebook.com")) {
+        AccessToken at = AccessToken.getCurrentAccessToken();
+        if (at != null) {
             fb_register = true;
             load_registration_through_facebook();
         }
