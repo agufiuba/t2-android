@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.CardView;
 import android.util.Log;
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity
     private Marker user_location_marker = null;
     private Marker originMarker = null;
     private Marker destinationMarker = null;
+    private Marker pickup_coords_Marker = null;
     private CardView search_card_view;
     private Button buttonNext;
     private FirebaseUser user;
@@ -297,12 +299,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 startEstado1();
-            }
+        }
         });
-    }
-
-    private void disponibilizar_chofer(){
-
     }
 
     public void startEstado0_Driver(){
@@ -313,11 +311,54 @@ public class MainActivity extends AppCompatActivity
         buttonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startEstado1_Driver();
+                disponibilizar_chofer();
             }
         });
     }
 
+    private void disponibilizar_chofer(){
+        String url = url_drivers;
+        class onDisponibleDriverRequestSuccess extends RequestHandler{
+            @Override
+            public void run(){
+                startEstado1_Driver();
+            }
+        }
+
+        class onDisponibleDriverRequestFailure extends RequestHandler{
+            @Override
+            public void run(){
+                Snackbar.make(buttonNext, "Error del servidor", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        }
+
+        Comunicador comunicador = new Comunicador(user,this);
+        comunicador.requestAuthenticated(
+                new onDisponibleDriverRequestSuccess(),
+                new onDisponibleDriverRequestFailure(),url,
+                new JSONObject(),Request.Method.POST);
+    }
+
+    private void startEstado1_Driver(){
+        estado_chofer = ESTADO_Chofer.ESTADO1;
+        //TODO recibir notificaciones mediante Firebase
+        //en caso de recibir notificacion... marcar posicion de recogida
+        ////show_pickup_coords(latLng);
+        startEstado2_Driver();
+    }
+
+    private void show_pickup_coords(LatLng latLng){
+        if (pickup_coords_Marker == null){
+            pickup_coords_Marker = mMap.addMarker(new MarkerOptions()
+                    .position(mMap.getCameraPosition().target)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+        }
+    }
+
+    private void startEstado2_Driver(){
+        //Dar de baja como chofer disponible
+    }
     /**
      * startEstado1
      * Estado 1: el usuario indica la posición de recogida. Esta posición puede ser
@@ -348,10 +389,6 @@ public class MainActivity extends AppCompatActivity
         Animation slide_left = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_left);
         search_card_view.setAnimation(slide_left);
         search_card_view.setVisibility(View.VISIBLE);
-    }
-
-    private void startEstado1_Driver(){
-
     }
 
     public void startEstado2() {
@@ -415,12 +452,11 @@ public class MainActivity extends AppCompatActivity
             public void onPolylineClick(Polyline polyline) {
             }
         });
+
+//        Dos lineas de prueba para ver el layout emergente con las specs del auto:
 //        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
 //        car_specs.setVisibility(View.VISIBLE);
 
-        Comunicador comunicador = new Comunicador(user, this);
-        JSONObject driversAroundRequest = new JSONObject();
-        //TODO poner headers y body para el request
 
         class onRequestSuccess extends RequestHandler {
             @Override
@@ -437,9 +473,10 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        url = url_drivers + "?pos=" + originMarker.getPosition().toString();
-        comunicador.requestFree(new onRequestSuccess(),
-                new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
+        //url = url_drivers + "?pos=" + originMarker.getPosition().toString();
+        url = "http://192.168.43.137:3000/drivers?pos=lat/lng:%20(-34.617568607691325,-58.385210037231445)";
+        Comunicador comunicador = new Comunicador(this.user, this);
+        comunicador.requestAuthenticated(new onRequestSuccess(), new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
     }
 
     /**
@@ -662,9 +699,9 @@ public class MainActivity extends AppCompatActivity
             final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 100;
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
-
+//            ActivityCompat.requestPermissions(this,
+//                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+            onResume();
 
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
