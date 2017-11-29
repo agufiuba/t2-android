@@ -9,4 +9,5 @@ public interface URL_local {
     String url_login = url + "login";
     String url_user = url + "user";
     String url_trip = url + "availableTrip";
+    String url_drivers = url + "drivers";
 }

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,7 +23,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -67,7 +67,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -83,18 +82,20 @@ import java.util.Map;
  */
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local, USER_TYPE {
 
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
-    private enum Estados {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
+    private enum ESTADO_Pasajero {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
+    private enum ESTADO_Chofer {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
     //ESTADO2: cuando el usuario puede indicar el destino del trayecto
 
     private String client_type;
-    private Estados estado;
+    private ESTADO_Pasajero estado_pasajero;
+    private ESTADO_Chofer estado_chofer;
     private GoogleMap mMap;
     private Marker user_location_marker = null;
     private Marker originMarker = null;
@@ -116,7 +117,6 @@ public class MainActivity extends AppCompatActivity
 
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-
 
     PlaceAutocompleteFragment autocompleteFragment;
 
@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity
         mLocationRequest.setFastestInterval(3000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        if (client_type.equals("passenger")) {
+        if (client_type.equals(USER_TYPE.PASSENGER)) {
             startEstado0();
         } else {
             startEstado0_Driver();
@@ -183,34 +183,40 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        switch (estado) {
-            case ESTADO4:
-                break;
-            case ESTADO3:
-                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()) {
-                    entry.getKey().remove();
-                }
-                routes.clear();
-                routeSpecs.setVisibility(View.INVISIBLE);
-                startEstado2();
-                break;
-            case ESTADO2:
-                destinationMarker.remove();
-                destinationMarker = null;
-                startEstado1();
-                break;
-            case ESTADO1:
-                originMarker.remove();
-                originMarker = null;
-                startEstado0();
-                break;
-            case ESTADO0:
-                break;
+        if (client_type == USER_TYPE.PASSENGER){
+            switch (estado_pasajero) {
+                case ESTADO4:
+                    break;
+                case ESTADO3:
+                    for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()) {
+                        entry.getKey().remove();
+                    }
+                    routes.clear();
+                    routeSpecs.setVisibility(View.INVISIBLE);
+                    startEstado2();
+                    break;
+                case ESTADO2:
+                    destinationMarker.remove();
+                    destinationMarker = null;
+                    startEstado1();
+                    break;
+                case ESTADO1:
+                    originMarker.remove();
+                    originMarker = null;
+                    startEstado0();
+                    break;
+                case ESTADO0:
+                    break;
+            }
+        } else {
+            switch (estado_chofer){
+                //TODO
+            }
         }
     }
 
     private void configureAutocompleteFragment() {
-        switch (estado) {
+        switch (estado_pasajero) {
             case ESTADO1:
                 autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelection(originMarker));
                 break;
@@ -283,7 +289,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void startEstado0() {
-        this.estado = Estados.ESTADO0;
+        this.estado_pasajero = ESTADO_Pasajero.ESTADO0;
         routeSpecs.setVisibility(View.INVISIBLE);
         search_card_view.setVisibility(View.INVISIBLE);
         buttonNext.setText("Indicar Recogida");
@@ -291,6 +297,23 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 startEstado1();
+            }
+        });
+    }
+
+    private void disponibilizar_chofer(){
+
+    }
+
+    public void startEstado0_Driver(){
+        this.estado_chofer = ESTADO_Chofer.ESTADO0;
+        routeSpecs.setVisibility(View.GONE);
+        search_card_view.setVisibility(View.GONE);
+        buttonNext.setText("Estoy Disponible");
+        buttonNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startEstado1_Driver();
             }
         });
     }
@@ -303,7 +326,7 @@ public class MainActivity extends AppCompatActivity
      * También puede apretar un botón que dropea el pin en la posicion actual del usuario.
      */
     private void startEstado1() {
-        estado = Estados.ESTADO1;
+        estado_pasajero = ESTADO_Pasajero.ESTADO1;
         routeSpecs.setVisibility(View.INVISIBLE);
         if (originMarker == null) {
             originMarker = mMap.addMarker(new MarkerOptions()
@@ -327,8 +350,12 @@ public class MainActivity extends AppCompatActivity
         search_card_view.setVisibility(View.VISIBLE);
     }
 
+    private void startEstado1_Driver(){
+
+    }
+
     public void startEstado2() {
-        estado = Estados.ESTADO2;
+        estado_pasajero = ESTADO_Pasajero.ESTADO2;
         routeSpecs.setVisibility(View.INVISIBLE);
         originMarker.setDraggable(false);
         if (destinationMarker == null) {
@@ -352,13 +379,77 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
+     * startEstado3
+     * Habiendose recibido el json con la ruta y los detalles de la ruta,
+     * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
+     * El boton pasa a ser boton para solicitar el viaje.
+     *
+     * @param routeDetails: respuesta al request hecho al APP en requestRoute
+     */
+    public void startEstado3(JSONObject routeDetails) {
+        try {
+            this.estado_pasajero = ESTADO_Pasajero.ESTADO3;
+            buttonNext.setText("Solicitar Viaje");
+            routes.put(drawRoute(routeDetails.getString("points")),
+                    new RouteDetails(routeDetails.getString("distance"),
+                            routeDetails.getString("time"),
+                            routeDetails.getString("cost")));
+            buttonNext.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startEstado4();
+                }
+            });
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void startEstado4() {
+        this.estado_pasajero = ESTADO_Pasajero.ESTADO4;
+
+        String url;
+        routeSpecs.setVisibility(View.GONE);
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+            public void onPolylineClick(Polyline polyline) {
+            }
+        });
+//        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
+//        car_specs.setVisibility(View.VISIBLE);
+
+        Comunicador comunicador = new Comunicador(user, this);
+        JSONObject driversAroundRequest = new JSONObject();
+        //TODO poner headers y body para el request
+
+        class onRequestSuccess extends RequestHandler {
+            @Override
+            public void run() {
+                displayAvailableDrivers(this.jsonRecv);
+            }
+        }
+
+        class onRequestFailure extends RequestHandler {
+            @Override
+            public void run() {
+                //TODO mostrar mensaje de error
+                startEstado0();
+            }
+        }
+
+        url = url_drivers + "?pos=" + originMarker.getPosition().toString();
+        comunicador.requestFree(new onRequestSuccess(),
+                new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
+    }
+
+    /**
      * requestRoute
      * El usuario ya tiene determinado de adonde a adonde ir
      * Le hace el request al servidor para recibir los caminos y los precios
-     * e inicia el estado 3.
+     * e inicia el estado_pasajero 3.
      */
     public void requestRoute() {
-        estado = Estados.ESTADO3;
+        estado_pasajero = ESTADO_Pasajero.ESTADO3;
         destinationMarker.setDraggable(false);
         search_card_view.setVisibility(View.GONE);
         Comunicador comunicador = new Comunicador(user, this);
@@ -391,69 +482,6 @@ public class MainActivity extends AppCompatActivity
 
         comunicador.requestAuthenticated(new onRequestSuccess(),
                 new onRequestFailure(), url_trip, from_to, Request.Method.POST);
-    }
-
-    public void startEstado0_Driver() {
-
-    }
-
-    /**
-     * startEstado3
-     * Habiendose recibido el json con la ruta y los detalles de la ruta,
-     * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
-     * El boton pasa a ser boton para solicitar el viaje.
-     *
-     * @param routeDetails: respuesta al request hecho al APP en requestRoute
-     */
-    public void startEstado3(JSONObject routeDetails) {
-        try {
-            this.estado = Estados.ESTADO3;
-            buttonNext.setText("Solicitar Viaje");
-            routes.put(drawRoute(routeDetails.getString("points")),
-                    new RouteDetails(routeDetails.getString("distance"),
-                            routeDetails.getString("time"),
-                            routeDetails.getString("cost")));
-            buttonNext.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    startEstado4();
-                }
-            });
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void startEstado4() {
-        this.estado = Estados.ESTADO4;
-        routeSpecs.setVisibility(View.GONE);
-        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
-            public void onPolylineClick(Polyline polyline) {
-            }
-        });
-//        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
-//        car_specs.setVisibility(View.VISIBLE);
-
-        Comunicador comunicador = new Comunicador(user, this);
-        JSONObject driversAroundRequest = new JSONObject();
-        //TODO poner headers y body para el request
-
-        class onRequestSuccess extends RequestHandler {
-            @Override
-            public void run() {
-                displayAvailableDrivers(this.jsonRecv);
-            }
-        }
-
-        class onRequestFailure extends RequestHandler {
-            @Override
-            public void run() {
-                //TODO mostrar mensaje de error
-                startEstado0();
-            }
-        }
-
     }
 
     private void displayAvailableDrivers(final JSONObject app_response) {
@@ -543,7 +571,7 @@ public class MainActivity extends AppCompatActivity
         task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
             @Override
             public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-
+                startLocationUpdates();
             }
         });
 
@@ -624,7 +652,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        boolean primero = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED;
+        boolean segundo = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED;
+
+        if (primero && segundo) {
+            final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 99;
+            final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 100;
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+
+
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -632,6 +673,8 @@ public class MainActivity extends AppCompatActivity
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            String TAG = "startLocationUpdates";
+            Log.d(TAG,"Entro al if");
             return;
         }
 
