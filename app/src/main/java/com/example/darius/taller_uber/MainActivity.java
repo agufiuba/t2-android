@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity
 
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-
+    DatabaseReference myRef;
     PlaceAutocompleteFragment autocompleteFragment;
 
     @Override
@@ -473,8 +473,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        //url = url_drivers + "?pos=" + originMarker.getPosition().toString();
-        url = "http://192.168.43.137:3000/drivers?pos=lat/lng:%20(-34.617568607691325,-58.385210037231445)";
+        url = url_drivers + "?pos=" + originMarker.getPosition().toString().replace(" ","%20");
+//        url = "http://192.168.43.137:3000/drivers?pos=lat/lng:%20(-34.617568607691325,-58.385210037231445)";
         Comunicador comunicador = new Comunicador(this.user, this);
         comunicador.requestAuthenticated(new onRequestSuccess(), new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
     }
@@ -721,7 +721,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void push_user_position_to_database() {
-        DatabaseReference myRef;
         myRef = database.getReference(this.user.getUid());
         myRef.setValue(user_location_marker.getPosition().toString());
     }
