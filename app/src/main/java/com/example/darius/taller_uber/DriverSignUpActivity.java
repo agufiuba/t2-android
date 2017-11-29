@@ -3,6 +3,8 @@ package com.example.darius.taller_uber;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,6 +17,10 @@ import android.widget.TextView;
 
 import com.android.volley.Request;
 
+import com.facebook.AccessToken;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -53,11 +59,13 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
     private String patente = null;
     private String musica = null;
     private LinearLayout modelo_layout, color_layout, patente_layout, estado_layout, aire_layout, musica_layout;
-
+    private TextInputLayout pwLayout;
     private EditText nombre, apellido, email, password;
     private TextView modelo_label, color_label, patente_label, estado_label, aire_label, musica_label;
     private Button confirm_signup_button;
     private Comunicador comunicador;
+
+    private boolean fb_register;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +73,15 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         setContentView(R.layout.activity_driver_sign_up);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
         load_layout_elements();
+        AccessToken at = AccessToken.getCurrentAccessToken();
+        if (at != null) {
+            fb_register = true;
+            load_registration_through_facebook();
+        }
+
         configure_layout_elements();
         comunicador = new Comunicador(user, this);
 //        requestCharSequences();
@@ -77,6 +92,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         apellido = (EditText) findViewById(R.id.apellido);
         email = (EditText) findViewById(R.id.email);
         password = (EditText) findViewById(R.id.password);
+        pwLayout = (TextInputLayout) findViewById(R.id.pw_layout);
         modelo_layout = (LinearLayout) findViewById(R.id.modelo_layout);
         modelo_label = (TextView) findViewById(R.id.modelo_label);
         color_layout = (LinearLayout) findViewById(R.id.color_layout);
@@ -90,6 +106,19 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         musica_layout = (LinearLayout) findViewById(R.id.musica_layout);
         musica_label = (TextView) findViewById(R.id.musica_label);
         confirm_signup_button = (Button) findViewById(R.id.confirm_signup_button);
+    }
+
+    /**
+     * Fija los valores de email, nombre y apellido extraidos de facebook.
+     */
+    private void load_registration_through_facebook() {
+        email.setText(user.getEmail());
+        email.setKeyListener(null);
+        nombre.setText(get_user_last_name());
+        nombre.setKeyListener(null);
+        apellido.setText(get_user_first_name());
+        apellido.setKeyListener(null);
+        pwLayout.setVisibility(View.GONE);
     }
 
     private void configure_layout_elements() {
@@ -371,28 +400,42 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         password.setError(null);
 
         // Store values at the time of the login attempt.
-        String _email = email.getText().toString();
-        String _password = password.getText().toString();
+        final String _email = email.getText().toString();
+        final String _password = password.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(_password) && !isPasswordValid(_password)) {
-            password.setError(getString(R.string.error_invalid_password));
-            focusView = password;
-            cancel = true;
-        }
+        if (!fb_register) {
+            // Check for a valid password, if the user entered one.
+            if (!TextUtils.isEmpty(_password) && !isPasswordValid(_password)) {
+                password.setError(getString(R.string.error_invalid_password));
+                focusView = password;
+                cancel = true;
+            }
 
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(_email)) {
-            email.setError(getString(R.string.error_field_required));
-            focusView = email;
-            cancel = true;
-        } else if (!isEmailValid(_email)) {
-            email.setError(getString(R.string.error_invalid_email));
-            focusView = email;
-            cancel = true;
+            // Check for a valid email address.
+            if (TextUtils.isEmpty(_email)) {
+                email.setError(getString(R.string.error_field_required));
+                focusView = email;
+                cancel = true;
+            } else if (!isEmailValid(_email)) {
+                email.setError(getString(R.string.error_invalid_email));
+                focusView = email;
+                cancel = true;
+            }
+
+            if (TextUtils.isEmpty(nombre.getText().toString())){
+                nombre.setError("No tenes nombre?");
+                focusView = nombre;
+                cancel = true;
+            }
+
+            if (TextUtils.isEmpty(apellido.getText().toString())){
+                apellido.setError("Decime tu apellido ameo");
+                focusView = apellido;
+                cancel = true;
+            }
         }
 
         // Chequeo si se indicó el modelo.
@@ -448,18 +491,32 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         }
 
         if (!cancel) {
-            mAuth = FirebaseAuth.getInstance();
-            mAuth.createUserWithEmailAndPassword(_email, _password);
-            mAuth.signInWithEmailAndPassword(_email, _password);
-            user = mAuth.getCurrentUser();
-            String newName = nombre.getText().toString() + " " + apellido.getText().toString();
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                .setDisplayName(newName)
-                .build();
-            user.updateProfile(profileUpdates);
-            sendSignUpRequest();
-            //TODO cambiar la actividad
-//            startActivity(new Intent(DriverSignUpActivity.this, MainActivity.class));
+            if (!fb_register) {
+                mAuth = FirebaseAuth.getInstance();
+                mAuth.createUserWithEmailAndPassword(_email, _password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        mAuth.signInWithEmailAndPassword(_email, _password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                user = mAuth.getCurrentUser();
+                                String newName = nombre.getText().toString() + " " + apellido.getText().toString();
+                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                        .setDisplayName(newName)
+                                        .build();
+                                user.updateProfile(profileUpdates).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        sendSignUpRequest();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                sendSignUpRequest();
+            }
         }
     }
 
@@ -484,7 +541,9 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
             class onSuccess extends RequestHandler {
                 @Override
                 public void run() {
-                    startActivity(new Intent(DriverSignUpActivity.this, MainActivity.class));
+                    Intent intent = new Intent(DriverSignUpActivity.this, MainActivity.class);
+                    intent.putExtra("Client Type","driver");
+                    startActivity(intent);
                 }
             }
 
@@ -515,4 +574,21 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
         return password.length() > 4;
     }
 
+    private String get_user_first_name() {
+        String name;
+        int i;
+
+        name = user.getDisplayName();
+        i = name.indexOf(" ");
+        return name.substring(i + 1, name.length());
+    }
+
+    private String get_user_last_name() {
+        String name;
+        int i;
+
+        name = user.getDisplayName();
+        i = name.indexOf(" ");
+        return name.substring(0, i);
+    }
 }
