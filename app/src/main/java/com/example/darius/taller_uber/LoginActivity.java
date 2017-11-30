@@ -407,6 +407,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final JSONObject params = new JSONObject();
         comunicador.requestAuthenticatedWithInstanceID(new onTokenPostSuccess(),
                 new onTokenPostFailure(), url_login, params, Request.Method.POST);
+//        comunicador.requestAuthenticated(new onTokenPostSuccess(),
+//                new onTokenPostFailure(), url_login, params, Request.Method.POST);
     }
 
     private boolean isEmailValid(String email) {

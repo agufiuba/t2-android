@@ -27,6 +27,7 @@
     android:theme="@style/AppTheme">
     <activity
         android:name=".LoginActivity"
+        android:launchMode="singleInstance"
         android:label="Taller_Uber">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"/>
@@ -62,6 +63,7 @@
     </activity>
     <activity
         android:name=".MainActivity"
+        android:launchMode="singleTop"
         android:label="@string/title_activity_main"
         android:theme="@style/AppTheme.NoActionBar">
     </activity>
@@ -71,7 +73,7 @@
             <action android:name="com.google.firebase.MESSAGING_EVENT"/>
         </intent-filter>
     </service>
-    <service android:name=".MyFirebaseInstanceIDService">
+    <service android:name="com.google.firebase.iid.FirebaseInstanceIdService">
         <intent-filter>
             <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
         </intent-filter>
