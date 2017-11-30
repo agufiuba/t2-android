@@ -57,6 +57,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -547,21 +548,18 @@ public class MainActivity extends AppCompatActivity
                 drivers.put(id, driverMarker);
             }
 
-            ValueEventListener postListener = new ValueEventListener() {
+            myRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    dataSnapshot.getKey();
-                    dataSnapshot.getValue();
-                    String key = dataSnapshot.getValue(String.class);
+                    show_driver_position(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
                 }
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            };
+            });
 
-            myRef.addValueEventListener(postListener);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -577,8 +575,8 @@ public class MainActivity extends AppCompatActivity
     private void show_driver_position(String key, String value) {
         value = value.substring(10, value.length() - 1);
         LatLng latLng = new LatLng(
-                Double.parseDouble(value.substring(10, 21)),
-                Double.parseDouble(value.substring(22, 32)));
+                Double.parseDouble(value.substring(0, 10)),
+                Double.parseDouble(value.substring(12, 22)));
         if (drivers.containsKey(key)) {
             drivers.get(key).setPosition(latLng);
         } else {
