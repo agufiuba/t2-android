@@ -65,6 +65,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import com.google.maps.android.PolyUtil;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
     private enum ESTADO_Pasajero {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
+
     private enum ESTADO_Chofer {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
@@ -186,7 +188,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (client_type == USER_TYPE.PASSENGER){
+        if (client_type == USER_TYPE.PASSENGER) {
             switch (estado_pasajero) {
                 case ESTADO4:
                     break;
@@ -212,7 +214,7 @@ public class MainActivity extends AppCompatActivity
                     break;
             }
         } else {
-            switch (estado_chofer){
+            switch (estado_chofer) {
                 //TODO
             }
         }
@@ -300,11 +302,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 startEstado1();
-        }
+            }
         });
     }
 
-    public void startEstado0_Driver(){
+    public void startEstado0_Driver() {
         this.estado_chofer = ESTADO_Chofer.ESTADO0;
         routeSpecs.setVisibility(View.GONE);
         search_card_view.setVisibility(View.GONE);
@@ -317,31 +319,31 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void disponibilizar_chofer(){
+    private void disponibilizar_chofer() {
         String url = url_drivers;
-        class onDisponibleDriverRequestSuccess extends RequestHandler{
+        class onDisponibleDriverRequestSuccess extends RequestHandler {
             @Override
-            public void run(){
+            public void run() {
                 startEstado1_Driver();
             }
         }
 
-        class onDisponibleDriverRequestFailure extends RequestHandler{
+        class onDisponibleDriverRequestFailure extends RequestHandler {
             @Override
-            public void run(){
+            public void run() {
                 Snackbar.make(buttonNext, "Error del servidor", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         }
 
-        Comunicador comunicador = new Comunicador(user,this);
+        Comunicador comunicador = new Comunicador(user, this);
         comunicador.requestAuthenticated(
                 new onDisponibleDriverRequestSuccess(),
-                new onDisponibleDriverRequestFailure(),url,
-                new JSONObject(),Request.Method.POST);
+                new onDisponibleDriverRequestFailure(), url,
+                new JSONObject(), Request.Method.POST);
     }
 
-    private void startEstado1_Driver(){
+    private void startEstado1_Driver() {
         estado_chofer = ESTADO_Chofer.ESTADO1;
         //TODO recibir notificaciones mediante Firebase
         //en caso de recibir notificacion... marcar posicion de recogida
@@ -349,17 +351,18 @@ public class MainActivity extends AppCompatActivity
         startEstado2_Driver();
     }
 
-    private void show_pickup_coords(LatLng latLng){
-        if (pickup_coords_Marker == null){
+    private void show_pickup_coords(LatLng latLng) {
+        if (pickup_coords_Marker == null) {
             pickup_coords_Marker = mMap.addMarker(new MarkerOptions()
                     .position(mMap.getCameraPosition().target)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
         }
     }
 
-    private void startEstado2_Driver(){
+    private void startEstado2_Driver() {
         //Dar de baja como chofer disponible
     }
+
     /**
      * startEstado1
      * Estado 1: el usuario indica la posición de recogida. Esta posición puede ser
@@ -474,7 +477,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        url = url_drivers + "?pos=" + originMarker.getPosition().toString().replace(" ","%20");
+        url = url_drivers + "?pos=" + originMarker.getPosition().toString().replace(" ", "%20");
         Comunicador comunicador = new Comunicador(this.user, this);
         comunicador.requestAuthenticated(new onRequestSuccess(), new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
     }
@@ -522,26 +525,52 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void displayAvailableDrivers(final JSONObject app_response) {
-        ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                dataSnapshot.getKey();
-                dataSnapshot.getValue();
-                String key = dataSnapshot.getValue(String.class);
+//            Log.v(TAG, "key = " + jobject.names().getString(i) + " value = " + jobject.get(jobject.names().getString(i)));
+        try {
+            JSONArray json1;
+            JSONObject json2;
+            String id = null;
+            String pos = null;
+            json1 = app_response.getJSONArray("drivers");
+            for (int i = 0; i < json1.length(); i++) {
+                json2 = json1.getJSONObject(i);
+                id = json2.getString("id");
+                pos = json2.getString("pos");
+                String lat = pos.substring(7,18);
+                String lng = pos.substring(25, 36);
+                LatLng latLng = new LatLng(
+                        Double.parseDouble(lat),
+                        Double.parseDouble(lng));
+                Marker driverMarker = mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
+                drivers.put(id, driverMarker);
             }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+            ValueEventListener postListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    dataSnapshot.getKey();
+                    dataSnapshot.getValue();
+                    String key = dataSnapshot.getValue(String.class);
+                }
 
-            }
-        };
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-        myRef.addValueEventListener(postListener);
+                }
+            };
+
+            myRef.addValueEventListener(postListener);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * show_driver_position
-     * @param key: userID de la database
+     *
+     * @param key:   userID de la database
      * @param value: valor de la posicion asociada.
      *               Ej: lat/lng: (-34.6231222,-58.3836347)
      */
@@ -550,7 +579,7 @@ public class MainActivity extends AppCompatActivity
         LatLng latLng = new LatLng(
                 Double.parseDouble(value.substring(10, 21)),
                 Double.parseDouble(value.substring(22, 32)));
-        if (drivers.containsKey(key)){
+        if (drivers.containsKey(key)) {
             drivers.get(key).setPosition(latLng);
         } else {
             Marker driverMarker = mMap.addMarker(new MarkerOptions()
@@ -694,7 +723,7 @@ public class MainActivity extends AppCompatActivity
         boolean primero = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED;
         boolean segundo = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED;
+                != PackageManager.PERMISSION_GRANTED;
 
         if (primero && segundo) {
             final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 99;
@@ -713,7 +742,7 @@ public class MainActivity extends AppCompatActivity
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             String TAG = "startLocationUpdates";
-            Log.d(TAG,"Entro al if");
+            Log.d(TAG, "Entro al if");
             return;
         }
 

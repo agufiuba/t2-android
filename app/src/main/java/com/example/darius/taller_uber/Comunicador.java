@@ -136,7 +136,7 @@ public class Comunicador {
                                         HashMap<String, String> headers = new HashMap<String, String>();
                                         headers.put("Authorization", idToken);
                                         headers.put("Content-Type","application/json");
-                                        headers.put("",FirebaseInstanceId.getInstance().getToken());
+                                        headers.put("Session",FirebaseInstanceId.getInstance().getToken());
                                         return headers;
                                     }
                                 };
