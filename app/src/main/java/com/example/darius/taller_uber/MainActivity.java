@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity
     //Firebase Database
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference myRef;
+
     PlaceAutocompleteFragment autocompleteFragment;
 
     @Override
@@ -180,11 +181,34 @@ public class MainActivity extends AppCompatActivity
         mLocationRequest.setFastestInterval(3000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+
         if (client_type.equals(USER_TYPE.PASSENGER)) {
             startEstado0();
+
+//            prueba_listener();
         } else {
             startEstado0_Driver();
         }
+    }
+
+    private void prueba_listener(){
+        final String TAG = "prueba_listener";
+        myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
+        ValueEventListener posListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()){
+                    String id = child.getKey();
+                    Log.d(TAG, "dataChanged " + id + " " + child.getValue());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled");
+            }
+        };
+        myRef.addValueEventListener(posListener);
     }
 
     @Override
@@ -467,6 +491,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 displayAvailableDrivers(this.jsonRecv);
+                on_database_update();
             }
         }
 
@@ -526,8 +551,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void displayAvailableDrivers(final JSONObject app_response) {
-//            Log.v(TAG, "key = " + jobject.names().getString(i) + " value = " + jobject.get(jobject.names().getString(i)));
         try {
+            drivers = new HashMap<>();
             JSONArray json1;
             JSONObject json2;
             String id = null;
@@ -537,32 +562,47 @@ public class MainActivity extends AppCompatActivity
                 json2 = json1.getJSONObject(i);
                 id = json2.getString("id");
                 pos = json2.getString("pos");
-                String lat = pos.substring(7,18);
-                String lng = pos.substring(25, 36);
-                LatLng latLng = new LatLng(
-                        Double.parseDouble(lat),
-                        Double.parseDouble(lng));
-                Marker driverMarker = mMap.addMarker(new MarkerOptions()
-                        .position(latLng)
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
-                drivers.put(id, driverMarker);
+                if (!drivers.containsKey(id)){
+                    String lat = pos.substring(7,18);
+                    String lng = pos.substring(25, 36);
+                    LatLng latLng = new LatLng(
+                            Double.parseDouble(lat),
+                            Double.parseDouble(lng));
+                    Marker driverMarker = mMap.addMarker(new MarkerOptions()
+                            .position(latLng)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
+                    drivers.put(id, driverMarker);
+                }
             }
-
-            myRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    show_driver_position(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+    }
+
+    private void on_database_update(){
+        final String TAG = "DATABASE_UPDATE";
+        myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
+        ValueEventListener posListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "new update.");
+                for (DataSnapshot child : dataSnapshot.getChildren()){
+                    String id = child.getKey();
+                    Log.d(TAG, "ID: " + id + " LAT/LNG: " + child.getValue(String.class));
+                    if (drivers.containsKey(id)){
+                        show_driver_position(id, child.getValue(String.class));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled");
+            }
+        };
+        myRef.addValueEventListener(posListener);
     }
 
     /**
@@ -575,8 +615,8 @@ public class MainActivity extends AppCompatActivity
     private void show_driver_position(String key, String value) {
         value = value.substring(10, value.length() - 1);
         LatLng latLng = new LatLng(
-                Double.parseDouble(value.substring(0, 10)),
-                Double.parseDouble(value.substring(12, 22)));
+                Double.parseDouble(value.substring(0, value.indexOf(","))),
+                Double.parseDouble(value.substring(value.indexOf(",") + 1, 21)));
         if (drivers.containsKey(key)) {
             drivers.get(key).setPosition(latLng);
         } else {
@@ -740,7 +780,7 @@ public class MainActivity extends AppCompatActivity
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             String TAG = "startLocationUpdates";
-            Log.d(TAG, "Entro al if");
+            Log.d(TAG, "GPS permission update");
             return;
         }
 
@@ -750,7 +790,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void push_user_position_to_database() {
-        myRef = database.getReference(this.user.getUid());
-        myRef.setValue(user_location_marker.getPosition().toString());
+        DatabaseReference ref = database.getReference(this.user.getUid());
+        ref.setValue(user_location_marker.getPosition().toString());
     }
 }
