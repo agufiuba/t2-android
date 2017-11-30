@@ -541,8 +541,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
             class onSuccess extends RequestHandler {
                 @Override
                 public void run() {
-                    Intent intent = new Intent(DriverSignUpActivity.this, MainActivity.class);
-                    intent.putExtra("Client Type","driver");
+                    Intent intent = new Intent(DriverSignUpActivity.this, LoginActivity.class);
                     startActivity(intent);
                 }
             }

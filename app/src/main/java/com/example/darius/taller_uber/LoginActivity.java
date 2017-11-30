@@ -405,7 +405,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void post_user_token(final String token) {
         Comunicador comunicador = new Comunicador(user, this);
         final JSONObject params = new JSONObject();
-        comunicador.requestAuthenticated(new onTokenPostSuccess(),
+        comunicador.requestAuthenticatedWithInstanceID(new onTokenPostSuccess(),
                 new onTokenPostFailure(), url_login, params, Request.Method.POST);
     }
 

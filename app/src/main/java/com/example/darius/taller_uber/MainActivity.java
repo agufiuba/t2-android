@@ -62,6 +62,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
 import com.google.maps.android.PolyUtil;
 
 import org.json.JSONException;
@@ -474,7 +475,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         url = url_drivers + "?pos=" + originMarker.getPosition().toString().replace(" ","%20");
-//        url = "http://192.168.43.137:3000/drivers?pos=lat/lng:%20(-34.617568607691325,-58.385210037231445)";
         Comunicador comunicador = new Comunicador(this.user, this);
         comunicador.requestAuthenticated(new onRequestSuccess(), new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
     }
@@ -525,9 +525,9 @@ public class MainActivity extends AppCompatActivity
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (app_response.has(dataSnapshot.getKey())) {
-                    show_driver_position(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
-                }
+                dataSnapshot.getKey();
+                dataSnapshot.getValue();
+                String key = dataSnapshot.getValue(String.class);
             }
 
             @Override
@@ -535,6 +535,8 @@ public class MainActivity extends AppCompatActivity
 
             }
         };
+
+        myRef.addValueEventListener(postListener);
     }
 
     /**
