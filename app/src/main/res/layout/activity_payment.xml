@@ -15,8 +15,8 @@
     
     <ScrollView
         android:id="@+id/paymentView"
-        android:layout_width="312dp"
-        android:layout_height="500dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:foregroundGravity="center"
         tools:layout_editor_absoluteY="0dp"
         tools:layout_editor_absoluteX="8dp">
