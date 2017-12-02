@@ -68,6 +68,19 @@
         android:theme="@style/AppTheme.NoActionBar">
     </activity>
 
+    <activity
+        android:name=".PassengerActivity"
+        android:launchMode="singleTop"
+        android:label="@string/title_activity_main"
+        android:theme="@style/AppTheme.NoActionBar">
+    </activity>
+    <activity
+        android:name=".DriverActivity"
+        android:launchMode="singleTop"
+        android:label="@string/title_activity_main"
+        android:theme="@style/AppTheme.NoActionBar">
+    </activity>
+
     <service android:name=".MyFirebaseMessagingService">
         <intent-filter>
             <action android:name="com.google.firebase.MESSAGING_EVENT"/>
@@ -113,7 +126,6 @@
     <activity android:name=".PaymentActivity">
     </activity>
 
-
-</application>
+    </application>
 
 </manifest>
