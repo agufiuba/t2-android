@@ -18,6 +18,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void hacerAlgo(RemoteMessage remoteMessage){
+
         Log.d(TAG2,remoteMessage.toString());
     }
 

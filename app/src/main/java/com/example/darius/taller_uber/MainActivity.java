@@ -1,6 +1,7 @@
 package com.example.darius.taller_uber;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
@@ -24,11 +26,10 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -57,7 +58,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -86,46 +86,45 @@ import java.util.Map;
  */
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local, USER_TYPE {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMarkerClickListener, URL_local, USER_TYPE {
 
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
-    private enum ESTADO_Pasajero {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
 
-    private enum ESTADO_Chofer {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4}
+    private enum ESTADO {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4;}
+
     //ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
     //ESTADO1: cuando el usuario puede indicar la posicion de recogida
     //ESTADO2: cuando el usuario puede indicar el destino del trayecto
 
+    /**Comun**/
     private String client_type;
-    private ESTADO_Pasajero estado_pasajero;
-    private ESTADO_Chofer estado_chofer;
+    private ESTADO estado;
     private GoogleMap mMap;
     private Marker user_location_marker = null;
     private Marker originMarker = null;
     private Marker destinationMarker = null;
-    private Marker pickup_coords_Marker = null;
-    private CardView search_card_view;
-    private Button buttonNext;
-    private FirebaseUser user;
-    private RequestQueue queue;
-    private LinearLayout routeSpecs;
-    private TextView distancia, duracion, costo;
     private FusedLocationProviderClient mFusedLocationClient;
+    private FirebaseUser user;
+    private Button stateButton;
     private Map<Polyline, RouteDetails> routes;
-    private Map<String, Marker> drivers;
-
-    //Location
+        /**Firebase Database**/
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef;
+    PlaceAutocompleteFragment autocompleteFragment;
+        /**Location**/
     boolean mRequestingLocationUpdates = false;
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
 
-    //Firebase Database
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference myRef;
-
-    PlaceAutocompleteFragment autocompleteFragment;
+    /**Passenger**/
+    private CardView search_card_view;
+    private LinearLayout route_specs;
+    private ScrollView car_specs;
+    private String selected_driver;
+    private TextView distancia, duracion, costo;
+    private Map<String, Marker> drivers = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,7 +134,8 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        buttonNext = (Button) findViewById(R.id.stateButton);
+        stateButton = (Button) findViewById(R.id.stateButton);
+        car_specs = (ScrollView) findViewById(R.id.car_specs);
 
         search_card_view = (CardView) findViewById(R.id.search_card_view);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
 
         routes = new HashMap<Polyline, RouteDetails>();
-        routeSpecs = (LinearLayout) findViewById(R.id.routeSpecs);
+        route_specs = (LinearLayout) findViewById(R.id.routeSpecs);
 
         distancia = (TextView) findViewById(R.id.distancia);
         duracion = (TextView) findViewById(R.id.duracion);
@@ -163,7 +163,6 @@ public class MainActivity extends AppCompatActivity
 
         mapFragment.getMapAsync(this);
         this.user = FirebaseAuth.getInstance().getCurrentUser();
-        this.queue = Volley.newRequestQueue(this);
 
         //Location
         configure_location_settings();
@@ -191,13 +190,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void prueba_listener(){
+    private void prueba_listener() {
         final String TAG = "prueba_listener";
         myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
         ValueEventListener posListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()){
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
                     String id = child.getKey();
                     Log.d(TAG, "dataChanged " + id + " " + child.getValue());
                 }
@@ -214,7 +213,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         if (client_type == USER_TYPE.PASSENGER) {
-            switch (estado_pasajero) {
+            switch (estado) {
                 case ESTADO4:
                     break;
                 case ESTADO3:
@@ -222,7 +221,7 @@ public class MainActivity extends AppCompatActivity
                         entry.getKey().remove();
                     }
                     routes.clear();
-                    routeSpecs.setVisibility(View.INVISIBLE);
+                    route_specs.setVisibility(View.INVISIBLE);
                     startEstado2();
                     break;
                 case ESTADO2:
@@ -238,15 +237,11 @@ public class MainActivity extends AppCompatActivity
                 case ESTADO0:
                     break;
             }
-        } else {
-            switch (estado_chofer) {
-                //TODO
-            }
         }
     }
 
     private void configureAutocompleteFragment() {
-        switch (estado_pasajero) {
+        switch (estado) {
             case ESTADO1:
                 autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelection(originMarker));
                 break;
@@ -263,11 +258,6 @@ public class MainActivity extends AppCompatActivity
         // Me posiciono sobre Buenos Aires
         LatLng bsas = new LatLng(-34.599722, -58.381944);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bsas, 12));
-        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
-            public void onPolylineClick(Polyline polyline) {
-                showRoadDetails(polyline);
-            }
-        });
     }
 
     @Override
@@ -319,11 +309,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void startEstado0() {
-        this.estado_pasajero = ESTADO_Pasajero.ESTADO0;
-        routeSpecs.setVisibility(View.INVISIBLE);
+        this.estado = ESTADO.ESTADO0;
+        route_specs.setVisibility(View.INVISIBLE);
         search_card_view.setVisibility(View.INVISIBLE);
-        buttonNext.setText("Indicar Recogida");
-        buttonNext.setOnClickListener(new View.OnClickListener() {
+        stateButton.setText("Indicar Recogida");
+        stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startEstado1();
@@ -332,11 +322,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void startEstado0_Driver() {
-        this.estado_chofer = ESTADO_Chofer.ESTADO0;
-        routeSpecs.setVisibility(View.GONE);
+        route_specs.setVisibility(View.GONE);
         search_card_view.setVisibility(View.GONE);
-        buttonNext.setText("Estoy Disponible");
-        buttonNext.setOnClickListener(new View.OnClickListener() {
+        stateButton.setText("Estoy Disponible");
+        stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 disponibilizar_chofer();
@@ -356,7 +345,7 @@ public class MainActivity extends AppCompatActivity
         class onDisponibleDriverRequestFailure extends RequestHandler {
             @Override
             public void run() {
-                Snackbar.make(buttonNext, "Error del servidor", Snackbar.LENGTH_LONG)
+                Snackbar.make(stateButton, "Error del servidor", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         }
@@ -369,19 +358,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startEstado1_Driver() {
-        estado_chofer = ESTADO_Chofer.ESTADO1;
+
         //TODO recibir notificaciones mediante Firebase
         //en caso de recibir notificacion... marcar posicion de recogida
         ////show_pickup_coords(latLng);
         startEstado2_Driver();
-    }
-
-    private void show_pickup_coords(LatLng latLng) {
-        if (pickup_coords_Marker == null) {
-            pickup_coords_Marker = mMap.addMarker(new MarkerOptions()
-                    .position(mMap.getCameraPosition().target)
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
-        }
     }
 
     private void startEstado2_Driver() {
@@ -396,8 +377,8 @@ public class MainActivity extends AppCompatActivity
      * También puede apretar un botón que dropea el pin en la posicion actual del usuario.
      */
     private void startEstado1() {
-        estado_pasajero = ESTADO_Pasajero.ESTADO1;
-        routeSpecs.setVisibility(View.INVISIBLE);
+        estado = ESTADO.ESTADO1;
+        route_specs.setVisibility(View.INVISIBLE);
         if (originMarker == null) {
             originMarker = mMap.addMarker(new MarkerOptions()
                     .position(mMap.getCameraPosition().target)
@@ -405,11 +386,11 @@ public class MainActivity extends AppCompatActivity
         }
         originMarker.setDraggable(true);
         configureAutocompleteFragment();
-        buttonNext.setVisibility(View.GONE);
-        buttonNext.setText("Indicar Destino");
-        buttonNext.setVisibility(View.VISIBLE);
+        stateButton.setVisibility(View.GONE);
+        stateButton.setText("Indicar Destino");
+        stateButton.setVisibility(View.VISIBLE);
 
-        buttonNext.setOnClickListener(new View.OnClickListener() {
+        stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startEstado2();
@@ -421,8 +402,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void startEstado2() {
-        estado_pasajero = ESTADO_Pasajero.ESTADO2;
-        routeSpecs.setVisibility(View.INVISIBLE);
+        estado = ESTADO.ESTADO2;
+        route_specs.setVisibility(View.INVISIBLE);
         originMarker.setDraggable(false);
         if (destinationMarker == null) {
             destinationMarker = mMap.addMarker(new MarkerOptions()
@@ -432,11 +413,11 @@ public class MainActivity extends AppCompatActivity
         destinationMarker.setDraggable(true);
         autocompleteFragment.setText("");
         configureAutocompleteFragment();
-        buttonNext.setVisibility(View.GONE);
-        buttonNext.setText("Previsualizar Viaje");
-        buttonNext.setVisibility(View.VISIBLE);
+        stateButton.setVisibility(View.GONE);
+        stateButton.setText("Previsualizar Viaje");
+        stateButton.setVisibility(View.VISIBLE);
 
-        buttonNext.setOnClickListener(new View.OnClickListener() {
+        stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 requestRoute();
@@ -454,13 +435,15 @@ public class MainActivity extends AppCompatActivity
      */
     public void startEstado3(JSONObject routeDetails) {
         try {
-            this.estado_pasajero = ESTADO_Pasajero.ESTADO3;
-            buttonNext.setText("Solicitar Viaje");
+            this.estado = ESTADO.ESTADO3;
+            stateButton.setText("Solicitar Viaje");
+            RouteDetails routeDetails1 = new RouteDetails(routeDetails.getString("distance"),
+                    routeDetails.getString("time"),
+                    routeDetails.getString("cost"));
             routes.put(drawRoute(routeDetails.getString("points")),
-                    new RouteDetails(routeDetails.getString("distance"),
-                            routeDetails.getString("time"),
-                            routeDetails.getString("cost")));
-            buttonNext.setOnClickListener(new View.OnClickListener() {
+                    routeDetails1);
+            showRoadDetails(routeDetails1);
+            stateButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     startEstado4();
@@ -473,19 +456,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startEstado4() {
-        this.estado_pasajero = ESTADO_Pasajero.ESTADO4;
+        this.estado = ESTADO.ESTADO4;
 
         String url;
-        routeSpecs.setVisibility(View.GONE);
+        route_specs.setVisibility(View.GONE);
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             public void onPolylineClick(Polyline polyline) {
             }
         });
-
-//        Dos lineas de prueba para ver el layout emergente con las specs del auto:
-//        ScrollView car_specs = (ScrollView) findViewById(R.id.car_specs);
-//        car_specs.setVisibility(View.VISIBLE);
-
 
         class onRequestSuccess extends RequestHandler {
             @Override
@@ -506,16 +484,75 @@ public class MainActivity extends AppCompatActivity
         url = url_drivers + "?pos=" + originMarker.getPosition().toString().replace(" ", "%20");
         Comunicador comunicador = new Comunicador(this.user, this);
         comunicador.requestAuthenticated(new onRequestSuccess(), new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
+        mMap.setOnMarkerClickListener(this);
+        stateButton.setText("Seleccionar Chofer");
+        stateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (selected_driver != null) {
+                    solicitar_chofer(selected_driver);
+                }
+            }
+        });
+    }
+
+    private void solicitar_chofer(String driver) {
+
+        class onSolicitarChoferSuccess extends RequestHandler {
+            @Override
+            public void run() {
+                notify_driver_is_comming();
+            }
+        }
+
+        class onSolicitarChoferFailure extends RequestHandler {
+            @Override
+            public void run() {
+                final String TAG = "Solicitar Chofer: ";
+                Log.e(TAG, volleyError.getMessage());
+            }
+        }
+
+        JSONObject params = new JSONObject();
+        try {
+            params.put("driverID",driver);
+            params.put("from",originMarker.getPosition().toString());
+            params.put("to",destinationMarker.getPosition().toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Comunicador comunicador = new Comunicador(user,this);
+        comunicador.requestAuthenticated(new onSolicitarChoferSuccess(),
+                new onSolicitarChoferFailure(),
+                url_trip_request, params, Request.Method.POST);
+    }
+
+    private void notify_driver_is_comming(){
+        stateButton.setVisibility(View.GONE);
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setMessage("¡El chofer está en camino!");
+        builder1.setCancelable(true);
+
+        builder1.setPositiveButton(
+                "Ok",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+
+        AlertDialog alert = builder1.create();
+        alert.show();
     }
 
     /**
      * requestRoute
      * El usuario ya tiene determinado de adonde a adonde ir
      * Le hace el request al servidor para recibir los caminos y los precios
-     * e inicia el estado_pasajero 3.
+     * e inicia el estado 3.
      */
     public void requestRoute() {
-        estado_pasajero = ESTADO_Pasajero.ESTADO3;
+        estado = ESTADO.ESTADO3;
         destinationMarker.setDraggable(false);
         search_card_view.setVisibility(View.GONE);
         Comunicador comunicador = new Comunicador(user, this);
@@ -552,7 +589,6 @@ public class MainActivity extends AppCompatActivity
 
     private void displayAvailableDrivers(final JSONObject app_response) {
         try {
-            drivers = new HashMap<>();
             JSONArray json1;
             JSONObject json2;
             String id = null;
@@ -562,8 +598,8 @@ public class MainActivity extends AppCompatActivity
                 json2 = json1.getJSONObject(i);
                 id = json2.getString("id");
                 pos = json2.getString("pos");
-                if (!drivers.containsKey(id)){
-                    String lat = pos.substring(7,18);
+                if (!drivers.containsKey(id)) {
+                    String lat = pos.substring(7, 18);
                     String lng = pos.substring(25, 36);
                     LatLng latLng = new LatLng(
                             Double.parseDouble(lat),
@@ -571,6 +607,7 @@ public class MainActivity extends AppCompatActivity
                     Marker driverMarker = mMap.addMarker(new MarkerOptions()
                             .position(latLng)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
+                    driverMarker.setTag(id);
                     drivers.put(id, driverMarker);
                 }
             }
@@ -581,17 +618,17 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void on_database_update(){
+    private void on_database_update() {
         final String TAG = "DATABASE_UPDATE";
         myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
         ValueEventListener posListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d(TAG, "new update.");
-                for (DataSnapshot child : dataSnapshot.getChildren()){
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
                     String id = child.getKey();
                     Log.d(TAG, "ID: " + id + " LAT/LNG: " + child.getValue(String.class));
-                    if (drivers.containsKey(id)){
+                    if (drivers.containsKey(id)) {
                         show_driver_position(id, child.getValue(String.class));
                     }
                 }
@@ -627,14 +664,14 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void showRoadDetails(Polyline polyline) {
-        RouteDetails details = routes.get(polyline);
+    private void showRoadDetails(RouteDetails details) {
+
         distancia.setText(details.distancia);
         duracion.setText(details.duracion);
         costo.setText(details.costo);
         Animation slide_up = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
-        routeSpecs.setAnimation(slide_up);
-        routeSpecs.setVisibility(View.VISIBLE);
+        route_specs.setAnimation(slide_up);
+        route_specs.setVisibility(View.VISIBLE);
     }
 
 
@@ -762,7 +799,6 @@ public class MainActivity extends AppCompatActivity
                 PackageManager.PERMISSION_GRANTED;
         boolean segundo = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED;
-
         if (primero && segundo) {
             final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 99;
             final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 100;
@@ -780,7 +816,7 @@ public class MainActivity extends AppCompatActivity
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             String TAG = "startLocationUpdates";
-            Log.d(TAG, "GPS permission update");
+            Log.d(TAG, "GPS_permission_update");
             return;
         }
 
@@ -792,5 +828,77 @@ public class MainActivity extends AppCompatActivity
     private void push_user_position_to_database() {
         DatabaseReference ref = database.getReference(this.user.getUid());
         ref.setValue(user_location_marker.getPosition().toString());
+    }
+
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+        if (drivers.containsValue(marker)) {
+            class onCarSpecsRequestSuccess extends RequestHandler {
+                @Override
+                public void run() {
+                    selected_driver = (String) marker.getTag();
+                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.selected_peer_location));
+                    show_car_specs(jsonRecv);
+                }
+            }
+
+            class onCarSpecsRequestFailure extends RequestHandler {
+                @Override
+                public void run() {
+                    final String TAG = "Car_Specs_Request:";
+                    Log.e(TAG, volleyError.getMessage());
+                }
+            }
+
+            String url = url_user + "/" + marker.getTag();
+//            String url = url_user + "/cc@cc.com";
+            Comunicador comunicador = new Comunicador(this.user, this);
+            comunicador.requestAuthenticated(new onCarSpecsRequestSuccess(),
+                    new onCarSpecsRequestFailure(), url,
+                    new JSONObject(),Request.Method.GET);
+
+        }
+
+        return false;
+    }
+
+    private void show_car_specs(JSONObject user_info) {
+        try {
+            JSONObject carSpecs = null;
+            carSpecs = user_info.getJSONObject("car");
+
+            TextView nombre = (TextView) findViewById(R.id.car_specs_nombre);
+            TextView color = (TextView) findViewById(R.id.car_specs_color);
+            TextView patente = (TextView) findViewById(R.id.car_specs_patente);
+            TextView estado = (TextView) findViewById(R.id.car_specs_estado);
+            TextView aire = (TextView) findViewById(R.id.car_specs_aire);
+            TextView musica = (TextView) findViewById(R.id.car_specs_musica);
+            TextView anio = (TextView) findViewById(R.id.car_specs_anio);
+            TextView modelo = (TextView) findViewById(R.id.car_specs_modelo);
+
+            String name = user_info.getString("name") + " " + user_info.getString("last_name");
+            nombre.setText(name);
+            color.setText(carSpecs.getString("color"));
+            patente.setText(carSpecs.getString("patent"));
+            anio.setText(carSpecs.getString("year"));
+            estado.setText(carSpecs.getString("state"));
+            aire.setText(carSpecs.getString("air_conditioner"));
+            musica.setText(carSpecs.getString("music"));
+            modelo.setText(carSpecs.getString("model"));
+
+//            /** Harcoding!! **/
+//            nombre.setText("Fulano");
+//            color.setText("Rojo");
+//            patente.setText("AA2000");
+//            anio.setText("2018");
+//            estado.setText("Nuevo");
+//            aire.setText("Si");
+//            musica.setText("Clasica");
+//            modelo.setText("S10");
+
+            car_specs.setVisibility(View.VISIBLE);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }
