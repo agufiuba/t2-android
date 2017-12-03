@@ -1,11 +1,18 @@
 package com.example.darius.taller_uber;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 
 import com.android.volley.Request;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
 
@@ -17,15 +24,51 @@ import org.json.JSONObject;
  * ESTADO0: vuelta al estado 0.
  */
 public class DriverActivity extends MainActivity {
-
+    private String TAG = "DRIVER_ACTIVITY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        on_message_received();
         startEstado0();
     }
 
+    private void on_message_received(){
+        this.mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(TAG,"Message received");
+                String passengerID = intent.getExtras().getString("passengerID");
+                LatLng from = processCoordinates(intent.getExtras().getString("from"));
+                LatLng to = processCoordinates(intent.getExtras().getString("to"));
+                if (originMarker == null) {
+                    originMarker = mMap.addMarker(new MarkerOptions()
+                            .position(from)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+                }
+                if (destinationMarker == null) {
+                    destinationMarker = mMap.addMarker(new MarkerOptions()
+                            .position(to)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
+                }
+                show_passenger_location(passengerID);
+                startEstado2();
+            }
+        };
+    }
+
+    private void show_passenger_location(String passengerID){
+        if(!this.peers.containsKey(passengerID)){
+            Marker passengerMarker = mMap.addMarker(new MarkerOptions()
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
+            peers.put(passengerID,passengerMarker);
+        }
+        on_database_update();
+    }
+
     public void startEstado0() {
+        this.estado = ESTADO.ESTADO0;
+        Log.d(TAG,"estado 0");
         stateButton.setText("Estoy Disponible");
         stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -36,15 +79,24 @@ public class DriverActivity extends MainActivity {
     }
 
     private void startEstado1() {
-
-        //TODO recibir notificaciones mediante Firebase
-        //en caso de recibir notificacion... marcar posicion de recogida
-        ////show_pickup_coords(latLng);
-        startEstado2();
+        this.estado = ESTADO.ESTADO1;
+        Log.d(TAG,"estado 1");
+        stateButton.setText("Esperando Viaje...");
+        stateButton.setClickable(false);
+        //TODO: mostrar pantalla de espera
     }
 
     private void startEstado2() {
-        //Dar de baja como chofer disponible
+        this.estado = ESTADO.ESTADO2;
+        Log.d(TAG, "estado 2");
+        stateButton.setText("Viaje Realizado");
+        stateButton.setClickable(true);
+        stateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startEstado0();
+            }
+        });
     }
 
     /**

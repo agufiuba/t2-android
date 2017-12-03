@@ -1,6 +1,9 @@
 package com.example.darius.taller_uber;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
@@ -49,7 +52,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     private ScrollView car_specs;
     private String selected_driver;
     private TextView distancia, duracion, costo;
-    private Map<String, Marker> drivers = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -61,9 +63,20 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         duracion = (TextView) findViewById(R.id.duracion);
         costo = (TextView) findViewById(R.id.costo);
         search_card_view = (CardView) findViewById(R.id.search_card_view);
+        on_message_received();
+
         startEstado0();
     }
 
+    private void on_message_received(){
+
+        this.mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(TAG,"Message received");
+            }
+        };
+    }
     public void startEstado0() {
         this.estado = ESTADO.ESTADO0;
         Log.d(TAG,"start estado 0");
@@ -319,14 +332,14 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         try {
             JSONArray json1;
             JSONObject json2;
-            String id = null;
-            String pos = null;
-            json1 = app_response.getJSONArray("drivers");
+            String id;
+            String pos;
+            json1 = app_response.getJSONArray("peers");
             for (int i = 0; i < json1.length(); i++) {
                 json2 = json1.getJSONObject(i);
                 id = json2.getString("id");
                 pos = json2.getString("pos");
-                if (!drivers.containsKey(id)) {
+                if (!peers.containsKey(id)) {
                     String lat = pos.substring(7, 18);
                     String lng = pos.substring(25, 36);
                     LatLng latLng = new LatLng(
@@ -336,7 +349,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
                             .position(latLng)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
                     driverMarker.setTag(id);
-                    drivers.put(id, driverMarker);
+                    peers.put(id, driverMarker);
                 }
             }
 
@@ -344,57 +357,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             e.printStackTrace();
         }
 
-    }
-
-    /**
-     * on_database_update
-     * Actualiza las posiciones de los choferes. Esto ocurre cuando la database
-     * que contiene las coordenadas de la ubicacion de los choferes se actualiza.
-     */
-    private void on_database_update() {
-        final String TAG = "DATABASE_UPDATE";
-        myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
-        ValueEventListener posListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "new update.");
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    String id = child.getKey();
-                    Log.d(TAG, "ID: " + id + " LAT/LNG: " + child.getValue(String.class));
-                    if (drivers.containsKey(id)) {
-                        show_driver_position(id, child.getValue(String.class));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d(TAG, "onCancelled");
-            }
-        };
-        myRef.addValueEventListener(posListener);
-    }
-
-    /**
-     * show_driver_position
-     *
-     * @param key:   userID de la database
-     * @param value: valor de la posicion asociada.
-     *               Ej: lat/lng: (-34.6231222,-58.3836347)
-     */
-    private void show_driver_position(String key, String value) {
-        value = value.substring(10, value.length() - 1);
-        LatLng latLng = new LatLng(
-                Double.parseDouble(value.substring(0, value.indexOf(","))),
-                Double.parseDouble(value.substring(value.indexOf(",") + 1, 21)));
-        if (drivers.containsKey(key)) {
-            drivers.get(key).setPosition(latLng);
-        } else {
-            Marker driverMarker = mMap.addMarker(new MarkerOptions()
-                    .position(latLng)
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
-            drivers.put(key, driverMarker);
-        }
     }
 
     /**
@@ -425,7 +387,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
      */
     @Override
     public boolean onMarkerClick(final Marker marker) {
-        if (drivers.containsValue(marker)) {
+        if (peers.containsValue(marker)) {
             class onCarSpecsRequestSuccess extends RequestHandler {
                 @Override
                 public void run() {
