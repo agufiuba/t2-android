@@ -122,6 +122,8 @@ public class MainActivity extends AppCompatActivity
 
         verify_gps_settings();
         this.routes = new HashMap<>();
+        myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
+
     }
 
     @Override
@@ -381,7 +383,6 @@ public class MainActivity extends AppCompatActivity
      */
     protected void on_database_update() {
         final String TAG = "DATABASE_UPDATE";
-        myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
         ValueEventListener posListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

@@ -38,12 +38,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
         }
+        try{
+            Log.d(TAG, remoteMessage.getData().toString());
+            Intent intent = new Intent("FCM_Message");
+            intent.putExtra("passengerID", remoteMessage.getData().get("passengerID"));
+            intent.putExtra("from", remoteMessage.getData().get("_from"));
+            intent.putExtra("to", remoteMessage.getData().get("_to"));
+            intent.putExtra("name", remoteMessage.getData().get("name"));
+            intent.putExtra("last_name", remoteMessage.getData().get("last_name"));
 
-        Intent intent = new Intent("FCM_Message");
-        intent.putExtra("passengerID", remoteMessage.getData().get("passengerID"));
-        intent.putExtra("from", remoteMessage.getData().get("from"));
-        intent.putExtra("to", remoteMessage.getData().get("to"));
-        broadcaster.sendBroadcast(intent);
+            broadcaster.sendBroadcast(intent);
+        } catch (NullPointerException e){
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     @Override

@@ -59,7 +59,9 @@ public class DriverActivity extends MainActivity {
 
     private void show_passenger_location(String passengerID){
         if(!this.peers.containsKey(passengerID)){
+            LatLng latLng = new LatLng(0,0);
             Marker passengerMarker = mMap.addMarker(new MarkerOptions()
+                    .position(latLng)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
             peers.put(passengerID,passengerMarker);
         }
