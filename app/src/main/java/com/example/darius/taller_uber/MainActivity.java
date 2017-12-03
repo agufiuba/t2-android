@@ -94,7 +94,9 @@ public class MainActivity extends AppCompatActivity
     protected LocationCallback mLocationCallback;
     protected LocationRequest mLocationRequest;
         /**Messaging Service**/
+    protected BroadcastReceiver mDataReceiver;
     protected BroadcastReceiver mMessageReceiver;
+    protected BroadcastReceiver mNotificationReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,8 +135,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     protected void listen_to_messages(){
+        LocalBroadcastManager.getInstance(this).registerReceiver((mDataReceiver),
+                new IntentFilter(FCM_MESSAGE_TYPE.FCM_DATA.name())
+        );
         LocalBroadcastManager.getInstance(this).registerReceiver((mMessageReceiver),
-                new IntentFilter("FCM_Message")
+                new IntentFilter(FCM_MESSAGE_TYPE.FCM_MESSAGE.name())
+        );
+        LocalBroadcastManager.getInstance(this).registerReceiver((mNotificationReceiver),
+                new IntentFilter(FCM_MESSAGE_TYPE.FCM_NOTIFICATION.name())
         );
     }
 
@@ -145,7 +153,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     protected void stop_listening_to_messages(){
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mDataReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mNotificationReceiver);
     }
 
     @Override

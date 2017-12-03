@@ -34,7 +34,7 @@ public class DriverActivity extends MainActivity {
     }
 
     private void on_message_received(){
-        this.mMessageReceiver = new BroadcastReceiver() {
+        this.mDataReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.d(TAG,"Message received");
@@ -53,6 +53,20 @@ public class DriverActivity extends MainActivity {
                 }
                 show_passenger_location(passengerID);
                 startEstado2();
+            }
+        };
+
+        this.mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //TODO activar el chat
+            }
+        };
+
+        this.mNotificationReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //TODO activar una notificacion
             }
         };
     }

@@ -2,10 +2,8 @@ package com.example.darius.taller_uber;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
@@ -22,15 +20,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -70,7 +64,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     private void on_message_received(){
 
-        this.mMessageReceiver = new BroadcastReceiver() {
+        this.mDataReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.d(TAG,"Message received");
@@ -264,21 +258,8 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     }
 
     private void notify_driver_is_comming(){
-        stateButton.setVisibility(View.GONE);
-        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-        builder1.setMessage("¡El chofer está en camino!");
-        builder1.setCancelable(true);
-
-        builder1.setPositiveButton(
-                "Ok",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-
-        AlertDialog alert = builder1.create();
-        alert.show();
+        stateButton.setText("¡El chofer esta en camino!");
+        stateButton.setClickable(false);
     }
 
     /**
