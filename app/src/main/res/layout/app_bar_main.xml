@@ -34,7 +34,7 @@
         android:layout_margin="5dp"
         android:padding="10dp"
         android:translationY="?attr/actionBarSize"
-        android:visibility="invisible"
+        android:visibility="gone"
         card_view:cardCornerRadius="4dp">
 
         <fragment
@@ -57,6 +57,7 @@
 
         <LinearLayout
             android:id="@+id/routeSpecs"
+            android:visibility="gone"
             android:animateLayoutChanges="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -155,6 +156,7 @@
                         android:padding="5dp">
 
                         <TextView
+                            android:id="@+id/car_specs_nombre"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="0"
@@ -182,6 +184,7 @@
                             android:text="Modelo:"/>
 
                         <TextView
+                            android:id="@+id/car_specs_modelo"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -203,6 +206,7 @@
                             android:text="Patente:"/>
 
                         <TextView
+                            android:id="@+id/car_specs_patente"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -224,6 +228,7 @@
                             android:text="Musica:"/>
 
                         <TextView
+                            android:id="@+id/car_specs_musica"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -253,6 +258,7 @@
                             android:text="Aire:"/>
 
                         <TextView
+                            android:id="@+id/car_specs_aire"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -274,6 +280,7 @@
                             android:text="Estado del auto:"/>
 
                         <TextView
+                            android:id="@+id/car_specs_estado"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="5dp"
@@ -295,6 +302,8 @@
                             android:text="Año:"/>
 
                         <TextView
+
+                            android:id="@+id/car_specs_anio"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="5dp"
@@ -316,6 +325,7 @@
                             android:text="Color:"/>
 
                         <TextView
+                            android:id="@+id/car_specs_color"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="5dp"

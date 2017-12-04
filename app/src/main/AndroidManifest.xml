@@ -23,8 +23,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".LoginActivity"
-            android:label="Taller_Uber"
-            android:launchMode="singleInstance">
+            android:launchMode="singleInstance"
+            android:label="Taller_Uber">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -56,19 +56,31 @@
             android:name=".PassengerSignUpActivity"
             android:label="PassengerSignUpActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="stateVisible|adjustResize"></activity>
+            android:windowSoftInputMode="stateVisible|adjustResize" />
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
+        <activity
+            android:name=".PassengerActivity"
+            android:launchMode="singleTop"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".DriverActivity"
+            android:launchMode="singleTop"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
         <service android:name=".MyFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service android:name="com.google.firebase.iid.FirebaseInstanceIdService">
+        <service android:name="com.google.firebase.iid.FirebaseInstanceIdService" >
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
@@ -77,15 +89,15 @@
         <activity
             android:name=".ProfileActivity"
             android:label="@string/title_activity_profile"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".SignUpActivity"
             android:label="@string/title_activity_sign_up"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".DriverSignUpActivity"
             android:label="@string/title_activity_driver_sign_up"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -104,8 +116,7 @@
 
         <activity android:name=".PaymentActivity"
             android:windowSoftInputMode="stateVisible|adjustResize"
-            android:theme="@style/AppTheme.NoActionBar"
-            ></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

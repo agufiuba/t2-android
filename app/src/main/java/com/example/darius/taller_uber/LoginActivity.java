@@ -197,15 +197,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         Log.d(TAG, "facebook:onRequestSequencesError", e);
                     }
                 });
-
-//        AccessTokenTracker accessTokenTracker = new AccessTokenTracker() {
-//            @Override
-//            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
-//                if(currentAccessToken == null){
-//                    mAuth.signOut();
-//                }
-//            }
-//        };
     }
 
     @Override
@@ -407,8 +398,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final JSONObject params = new JSONObject();
         comunicador.requestAuthenticatedWithInstanceID(new onTokenPostSuccess(),
                 new onTokenPostFailure(), url_login, params, Request.Method.POST);
-//        comunicador.requestAuthenticated(new onTokenPostSuccess(),
-//                new onTokenPostFailure(), url_login, params, Request.Method.POST);
     }
 
     private boolean isEmailValid(String email) {
@@ -422,9 +411,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void startMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("Client Type", this.client_type);
-        startActivity(intent);
+        switch (this.client_type){
+            case (USER_TYPE.PASSENGER):
+               startActivity(new Intent(this, PassengerActivity.class));
+               break;
+            case (USER_TYPE.DRIVER):
+                startActivity(new Intent(this, DriverActivity.class));
+                break;
+        }
     }
 
     private void startRegisterActivity() {

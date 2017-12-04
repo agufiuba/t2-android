@@ -11,4 +11,5 @@ public interface URL_local {
     String url_user = url + "user";
     String url_trip = url + "availableTrip";
     String url_drivers = url + "drivers";
+    String url_trip_request = url + "trips";
 }
