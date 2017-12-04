@@ -9,7 +9,9 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.support.design.widget.NavigationView;
@@ -20,6 +22,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 
 import com.google.android.gms.common.api.ApiException;
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
     protected enum ESTADO {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4;}
-
+    protected enum DBREFERENCES {localizations, chats};
     /**Comun**/
     protected String client_type;
     protected ESTADO estado;
@@ -87,7 +90,7 @@ public class MainActivity extends AppCompatActivity
 
         /**Firebase Database**/
     protected FirebaseDatabase database = FirebaseDatabase.getInstance();
-    protected DatabaseReference myRef;
+    protected DatabaseReference dbReference;
     protected PlaceAutocompleteFragment autocompleteFragment;
         /**Location**/
     protected boolean mRequestingLocationUpdates = false;
@@ -124,8 +127,7 @@ public class MainActivity extends AppCompatActivity
 
         verify_gps_settings();
         this.routes = new HashMap<>();
-        myRef = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
-
+        dbReference = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
     }
 
     @Override
@@ -374,7 +376,7 @@ public class MainActivity extends AppCompatActivity
      * Actualiza en la database de Firebase la posicion del cliente.
      */
     private void push_user_position_to_database() {
-        DatabaseReference ref = database.getReference(this.user.getUid());
+        DatabaseReference ref = database.getReference(DBREFERENCES.localizations.name()).child(this.user.getUid());
         ref.setValue(user_location_marker.getPosition().toString());
     }
 
@@ -387,12 +389,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * on_database_update
+     * on_location_database_update
      * Actualiza las posiciones de los choferes. Esto ocurre cuando la database
      * que contiene las coordenadas de la ubicacion de los choferes se actualiza.
      */
-    protected void on_database_update() {
-        final String TAG = "DATABASE_UPDATE";
+    protected void on_location_database_update() {
+        final String TAG = "LOCATION_DB_UPDATE";
         ValueEventListener posListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -411,7 +413,7 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "onCancelled");
             }
         };
-        myRef.addValueEventListener(posListener);
+        dbReference.child(DBREFERENCES.localizations.name()).addValueEventListener(posListener);
     }
 
     /**
@@ -457,4 +459,20 @@ public class MainActivity extends AppCompatActivity
         super.onSaveInstanceState(outState);
     }
 
+    static public class Chat extends FragmentActivity {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState){
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.chat);
+            FloatingActionButton fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
+            fab_send.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                }
+            });
+
+        }
+    }
 }

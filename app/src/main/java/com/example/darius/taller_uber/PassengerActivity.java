@@ -188,7 +188,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             @Override
             public void run() {
                 displayAvailableDrivers(this.jsonRecv);
-                on_database_update();
+                on_location_database_update();
             }
         }
 

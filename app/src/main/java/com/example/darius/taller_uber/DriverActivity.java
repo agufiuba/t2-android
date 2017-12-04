@@ -79,7 +79,7 @@ public class DriverActivity extends MainActivity {
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
             peers.put(passengerID,passengerMarker);
         }
-        on_database_update();
+        on_location_database_update();
     }
 
     public void startEstado0() {
