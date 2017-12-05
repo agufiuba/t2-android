@@ -1,9 +1,6 @@
 package com.example.darius.taller_uber;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -12,10 +9,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.support.design.widget.NavigationView;
@@ -26,12 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -111,7 +100,7 @@ public class MainActivity extends AppCompatActivity
 
     protected android.support.v4.app.FragmentManager manager;
     protected android.support.v4.app.FragmentTransaction transaction;
-    protected Fragment chat = new ChatFragment();
+    protected ChatFragment chat = new ChatFragment();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,7 +127,7 @@ public class MainActivity extends AppCompatActivity
 
         manager = getSupportFragmentManager();
         transaction = manager.beginTransaction();
-        transaction.add(R.id.activity_main, chat,"Chat");
+        transaction.add(R.id.fragmentContainer, chat,"Chat");
         transaction.addToBackStack(null);
         transaction.commit();
 
@@ -222,7 +211,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, ProfileActivity.class);
             startActivity(intent);
         } else if (id == R.id.chat) {
-            transaction.replace(R.id.activity_main, chat);
+            transaction.replace(R.id.fragmentContainer, chat, "Chat");
             transaction.addToBackStack(null);
             transaction.commit();
         } else if (id == R.id.nav_manage) {
