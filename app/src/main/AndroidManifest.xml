@@ -1,114 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.darius.taller_uber">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.darius.taller_uber">
 
-<!-- To auto-complete the email text field in the login form with the user's emails -->
-<uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-<uses-permission android:name="android.permission.READ_PROFILE"/>
-<uses-permission android:name="android.permission.READ_CONTACTS"/>
-<uses-permission android:name="android.permission.INTERNET"/>
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-<!--
+    <!-- To auto-complete the email text field in the login form with the user's emails -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_PROFILE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but you must specify either coarse or fine
          location permissions for the 'MyLocation' functionality.
-
-
-
     -->
-
-
     <application
-    android:allowBackup="true"
-    android:icon="@mipmap/ic_launcher"
-    android:label="@string/Taller_Uber"
-    android:roundIcon="@mipmap/ic_launcher_round"
-    android:supportsRtl="true"
-    android:theme="@style/AppTheme">
-    <activity
-        android:name=".LoginActivity"
-        android:launchMode="singleInstance"
-        android:label="Taller_Uber">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN"/>
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/Taller_Uber"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".LoginActivity"
+            android:launchMode="singleInstance"
+            android:label="Taller_Uber">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-            <category android:name="android.intent.category.LAUNCHER"/>
-        </intent-filter>
-    </activity>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
-    <meta-data
-        android:name="com.facebook.sdk.ApplicationId"
-        android:value="@string/facebook_app_id"/>
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
 
-    <activity
-        android:name="com.facebook.FacebookActivity"
-        android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
-        android:label="@string/Taller_Uber"/>
-    <activity
-        android:name="com.facebook.CustomTabActivity"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW"/>
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/Taller_Uber"/>
+        <activity
+            android:name="com.facebook.CustomTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
 
-            <category android:name="android.intent.category.DEFAULT"/>
-            <category android:name="android.intent.category.BROWSABLE"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
-            <data android:scheme="@string/fb_login_protocol_scheme"/>
-        </intent-filter>
-    </activity>
-    <activity
-        android:name=".PassengerSignUpActivity"
-        android:label="PassengerSignUpActivity"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
-    <activity
-        android:name=".MainActivity"
-        android:launchMode="singleTop"
-        android:label="@string/title_activity_main"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
+                <data android:scheme="@string/fb_login_protocol_scheme" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".PassengerSignUpActivity"
+            android:label="PassengerSignUpActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar" />
 
-    <activity
-        android:name=".PassengerActivity"
-        android:launchMode="singleTop"
-        android:label="@string/title_activity_main"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
-    <activity
-        android:name=".DriverActivity"
-        android:launchMode="singleTop"
-        android:label="@string/title_activity_main"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
+        <activity
+            android:name=".PassengerActivity"
+            android:launchMode="singleTop"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".DriverActivity"
+            android:launchMode="singleTop"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <service android:name=".MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <service android:name="com.google.firebase.iid.FirebaseInstanceIdService" >
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
 
-    <service android:name=".MyFirebaseMessagingService">
-        <intent-filter>
-            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-        </intent-filter>
-    </service>
-    <service android:name="com.google.firebase.iid.FirebaseInstanceIdService">
-        <intent-filter>
-            <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-        </intent-filter>
-    </service>
+        <activity
+            android:name=".ProfileActivity"
+            android:label="@string/title_activity_profile"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".SignUpActivity"
+            android:label="@string/title_activity_sign_up"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".DriverSignUpActivity"
+            android:label="@string/title_activity_driver_sign_up"
+            android:theme="@style/AppTheme.NoActionBar" />
 
-    <activity
-        android:name=".ProfileActivity"
-        android:label="@string/title_activity_profile"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
-    <activity
-        android:name=".SignUpActivity"
-        android:label="@string/title_activity_sign_up"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
-    <activity
-        android:name=".DriverSignUpActivity"
-        android:label="@string/title_activity_driver_sign_up"
-        android:theme="@style/AppTheme.NoActionBar">
-    </activity>
-
-    <!--
+        <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
              Note that the API key is linked to the encryption key used to sign the APK.
@@ -116,16 +108,16 @@
              sign the APK for publishing.
              You can define the keys for the debug and release targets in src/debug/ and src/release/.
         -->
-    <meta-data
-        android:name="com.google.android.geo.API_KEY"
-        android:value="@string/google_maps_key"/>
-    <meta-data
-        android:name="com.google.android.places.API_KEY"
-        android:value="@string/google_places_key"/>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+        <meta-data
+            android:name="com.google.android.places.API_KEY"
+            android:value="@string/google_places_key" />
 
-    <activity android:name=".PaymentActivity">
-    </activity>
-
+        <activity android:name=".PaymentActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>
