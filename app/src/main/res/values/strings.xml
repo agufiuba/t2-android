@@ -88,7 +88,7 @@
         <item>3</item>
     </string-array>
 
-    <string-array name="multi_select_list_preference_default_value"/>
+    <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
 
@@ -111,5 +111,8 @@
     <string name="title_activity_driver_sign_up2">DriverSignUpActivity2</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="title_activity_maps">Map</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

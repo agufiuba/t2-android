@@ -1,6 +1,9 @@
 package com.example.darius.taller_uber;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +14,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -24,6 +28,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -101,6 +109,9 @@ public class MainActivity extends AppCompatActivity
     protected BroadcastReceiver mMessageReceiver;
     protected BroadcastReceiver mNotificationReceiver;
 
+    protected android.support.v4.app.FragmentManager manager;
+    protected android.support.v4.app.FragmentTransaction transaction;
+    protected Fragment chat = new ChatFragment();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,6 +135,12 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        manager = getSupportFragmentManager();
+        transaction = manager.beginTransaction();
+        transaction.add(R.id.activity_main, chat,"Chat");
+        transaction.addToBackStack(null);
+        transaction.commit();
 
         verify_gps_settings();
         this.routes = new HashMap<>();
@@ -190,6 +207,11 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * onNavigationItemSelected
+     * Dispara la actividad o el fragmento asociado a uno de los ítems
+     * del panel lateral.
+     */
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -200,7 +222,9 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, ProfileActivity.class);
             startActivity(intent);
         } else if (id == R.id.chat) {
-
+            transaction.replace(R.id.activity_main, chat);
+            transaction.addToBackStack(null);
+            transaction.commit();
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_send) {
@@ -459,20 +483,4 @@ public class MainActivity extends AppCompatActivity
         super.onSaveInstanceState(outState);
     }
 
-    static public class Chat extends FragmentActivity {
-
-        @Override
-        public void onCreate(Bundle savedInstanceState){
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.chat);
-            FloatingActionButton fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
-            fab_send.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                }
-            });
-
-        }
-    }
 }
