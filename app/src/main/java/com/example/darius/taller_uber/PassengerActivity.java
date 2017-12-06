@@ -20,6 +20,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +48,9 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     private LinearLayout route_specs;
     private ScrollView car_specs;
     private String selected_driver;
+    private String driverID;
     private TextView distancia, duracion, costo;
+    private ValueEventListener driverNotificationsListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -63,7 +68,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     }
 
     private void on_message_received(){
-
         this.mDataReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -71,6 +75,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             }
         };
     }
+
     public void startEstado0() {
         this.estado = ESTADO.ESTADO0;
         Log.d(TAG,"start estado 0");
@@ -215,6 +220,17 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         });
     }
 
+    /**
+     * setDB_chatID
+     * Un chat se establece entre un chofer y un pasajero.
+     * Por convención, estableceremos que la ID del chat en la database de firebase
+     * será la suma de ID del chofer + ID del pasajero.
+     */
+    @Override
+    final protected void setDb_chatID(String driverID){
+        this.db_chatID = driverID + this.user.getUid();
+    }
+
     protected void configureAutocompleteFragment() {
         switch (estado) {
             case ESTADO1:
@@ -226,12 +242,14 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         }
     }
 
-    private void solicitar_chofer(String driver) {
+    private void solicitar_chofer(final String driver) {
 
         class onSolicitarChoferSuccess extends RequestHandler {
             @Override
             public void run() {
+                driverID = driver;
                 notify_driver_is_comming();
+                setDb_chatID(driverID);
             }
         }
 
@@ -259,9 +277,43 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     private void notify_driver_is_comming(){
         stateButton.setText("¡El chofer esta en camino!");
+        listen_to_driver_notifications();
         stateButton.setClickable(false);
     }
 
+    private void clearAll(){
+        stop_listening_to_driver_notifications();
+        mMap.clear();
+        originMarker = null;
+        destinationMarker = null;
+    }
+    private void listen_to_driver_notifications(){
+        final String TAG = "DRIVER_NOTIFICATION";
+        driverNotificationsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "new update in the notifications DB.");
+                String message = (String) dataSnapshot.getValue();
+                if (message.equals("Finalizó tu viaje")){
+                    clearAll();
+                    startEstado0();
+                } else {
+                    stateButton.setText(message);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled");
+            }
+        };
+        dbReference.child(DBREFERENCES.localizations.name()).child(this.user.getUid()).
+                addValueEventListener(driverNotificationsListener);
+    }
+
+    private void stop_listening_to_driver_notifications(){
+        if (driverNotificationsListener != null)
+            dbReference.removeEventListener(driverNotificationsListener);
+    }
     /**
      * requestRoute
      * El usuario ya tiene determinado de adonde a adonde ir

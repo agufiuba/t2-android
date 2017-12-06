@@ -7,22 +7,20 @@
     <TextView
         android:id="@+id/message_user"
         android:paddingStart="10dp"
-        android:paddingEnd="10dp"
+        android:paddingEnd="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:text="fdsfsdf"
         android:textStyle="normal|bold" />
 
     <TextView
         android:id="@+id/message_text"
         android:paddingStart="10dp"
-        android:paddingEnd="10dp"
+        android:paddingEnd="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/message_user"
         android:layout_marginTop="5dp"
-        android:text="dsfsdfds"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@android:color/white"
         android:textSize="18sp" />
@@ -30,9 +28,8 @@
     <TextView
         android:id="@+id/message_time"
         android:paddingStart="10dp"
-        android:paddingEnd="10dp"
+        android:paddingEnd="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/message_text"
-        android:text="sdfsdfsd" />
+        android:layout_below="@id/message_text" />
 </RelativeLayout>

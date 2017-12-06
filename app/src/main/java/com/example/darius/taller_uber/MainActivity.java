@@ -70,16 +70,17 @@ import java.util.Map;
 
 
 
-public class MainActivity extends AppCompatActivity
+abstract public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local, USER_TYPE {
 
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
     protected enum ESTADO {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4;}
-    protected enum DBREFERENCES {localizations, chats};
+    protected enum DBREFERENCES {localizations, chats, notifications};
     /**Comun**/
     protected String client_type;
+    protected String peerID;
     protected ESTADO estado;
     protected GoogleMap mMap;
     protected Marker user_location_marker = null;
@@ -90,11 +91,11 @@ public class MainActivity extends AppCompatActivity
     protected Button stateButton;
     protected Map<Polyline, RouteDetails> routes;
     protected Map<String, Marker> peers = new HashMap<>();
+    protected PlaceAutocompleteFragment autocompleteFragment;
 
-        /**Firebase Database**/
+    /**Firebase Database**/
     protected FirebaseDatabase database = FirebaseDatabase.getInstance();
     protected DatabaseReference dbReference;
-    protected PlaceAutocompleteFragment autocompleteFragment;
         /**Location**/
     protected boolean mRequestingLocationUpdates = false;
     protected LocationCallback mLocationCallback;
@@ -103,6 +104,8 @@ public class MainActivity extends AppCompatActivity
     protected BroadcastReceiver mDataReceiver;
     protected BroadcastReceiver mMessageReceiver;
     protected BroadcastReceiver mNotificationReceiver;
+    /**Chat**/
+    protected String db_chatID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,6 +135,14 @@ public class MainActivity extends AppCompatActivity
         this.routes = new HashMap<>();
         dbReference = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
     }
+
+    /**
+     * setDB_chatID
+     * Un chat se establece entre un chofer y un pasajero.
+     * Por convención, estableceremos que la ID del chat en la database de firebase
+     * será la suma de ID del chofer + ID del pasajero.
+     */
+    abstract protected void setDb_chatID(String passengerID);
 
     @Override
     protected void onStart() {
