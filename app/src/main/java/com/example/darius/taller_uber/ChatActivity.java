@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
  * Código extraído del tutorial http://www.devexchanges.info/2016/12/simple-chat-application-using-firebase.html
  * y adaptado a las necesidades de la aplicación.
  */
-public class ChatFragment extends Fragment {
+public class ChatFragment extends AppCompatActivity{
 
     String loggedInUserName;
     ListView listView;
@@ -33,12 +34,12 @@ public class ChatFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final EditText input = (EditText) getView().findViewById(R.id.input);
-        listView = (ListView) getView().findViewById(R.id.list);
+        final EditText input = (EditText) findViewById(R.id.input);
+        listView = (ListView) findViewById(R.id.list);
         showAllOldMessages();
-        FloatingActionButton fab_send = (FloatingActionButton) getView().findViewById(R.id.fab_send);
+        FloatingActionButton fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
         fab_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -56,12 +57,12 @@ public class ChatFragment extends Fragment {
                 }
             }
         });
-        return inflater.inflate(R.layout.chat, container, false);
     }
 
     public String getUserID(){
         return loggedInUserName;
     }
+
     private void showAllOldMessages() {
         loggedInUserName = FirebaseAuth.getInstance().getCurrentUser().getUid();
         Log.d("Main", "user id: " + loggedInUserName);
