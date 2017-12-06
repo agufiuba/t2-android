@@ -50,7 +50,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     private String selected_driver;
     private String driverID;
     private TextView distancia, duracion, costo;
-    private ValueEventListener driverNotificationsListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -277,43 +276,15 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     private void notify_driver_is_comming(){
         stateButton.setText("¡El chofer esta en camino!");
-        listen_to_driver_notifications();
         stateButton.setClickable(false);
     }
 
     private void clearAll(){
-        stop_listening_to_driver_notifications();
         mMap.clear();
         originMarker = null;
         destinationMarker = null;
     }
-    private void listen_to_driver_notifications(){
-        final String TAG = "DRIVER_NOTIFICATION";
-        driverNotificationsListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "new update in the notifications DB.");
-                String message = (String) dataSnapshot.getValue();
-                if (message.equals("Finalizó tu viaje")){
-                    clearAll();
-                    startEstado0();
-                } else {
-                    stateButton.setText(message);
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d(TAG, "onCancelled");
-            }
-        };
-        dbReference.child(DBREFERENCES.localizations.name()).child(this.user.getUid()).
-                addValueEventListener(driverNotificationsListener);
-    }
 
-    private void stop_listening_to_driver_notifications(){
-        if (driverNotificationsListener != null)
-            dbReference.removeEventListener(driverNotificationsListener);
-    }
     /**
      * requestRoute
      * El usuario ya tiene determinado de adonde a adonde ir

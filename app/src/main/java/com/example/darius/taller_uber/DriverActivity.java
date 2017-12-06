@@ -54,7 +54,7 @@ public class DriverActivity extends MainActivity {
                 }
                 setDb_chatID(passengerID);
                 show_passenger_location(passengerID);
-                startEstado1b();
+                startEstado2();
             }
         };
 
@@ -90,17 +90,6 @@ public class DriverActivity extends MainActivity {
             @Override
             public void onClick(View view) {
                 disponibilizar_chofer();
-            }
-        });
-    }
-
-    private void startEstado1b(){
-        stateButton.setText("Notificar arribo");
-        stateButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                database.getReference(DBREFERENCES.notifications.name()).child(passengerID).setValue("El chofer ha arribado");
-                startEstado2();
             }
         });
     }
