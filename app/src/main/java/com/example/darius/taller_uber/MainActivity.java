@@ -98,9 +98,9 @@ public class MainActivity extends AppCompatActivity
     protected BroadcastReceiver mMessageReceiver;
     protected BroadcastReceiver mNotificationReceiver;
 
-    protected android.support.v4.app.FragmentManager manager;
-    protected android.support.v4.app.FragmentTransaction transaction;
-    protected ChatFragment chat = new ChatFragment();
+//    protected android.support.v4.app.FragmentManager manager;
+//    protected android.support.v4.app.FragmentTransaction transaction;
+//    protected ChatFragment chat = new ChatFragment();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,15 +125,15 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        manager = getSupportFragmentManager();
-        transaction = manager.beginTransaction();
-        transaction.add(R.id.fragmentContainer, chat,"Chat");
-        transaction.addToBackStack(null);
-        transaction.commit();
+//        manager = getSupportFragmentManager();
+//        transaction = manager.beginTransaction();
+//        transaction.add(R.id.chat, chat,"Chat");
+//        transaction.addToBackStack(null);
+//        transaction.commit();
 
         verify_gps_settings();
         this.routes = new HashMap<>();
-        dbReference = database.getReferenceFromUrl("https://t2t2-9753f.firebaseio.com/");
+        dbReference = database.getReferenc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          eFromUrl("https://t2t2-9753f.firebaseio.com/");
     }
 
     @Override
@@ -211,9 +211,9 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, ProfileActivity.class);
             startActivity(intent);
         } else if (id == R.id.chat) {
-            transaction.replace(R.id.fragmentContainer, chat, "Chat");
-            transaction.addToBackStack(null);
-            transaction.commit();
+//            transaction.replace(R.id.chat, chat, "Chat");
+//            transaction.addToBackStack(null);
+//            transaction.commit();
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_send) {
