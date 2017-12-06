@@ -3,6 +3,7 @@ package com.example.darius.taller_uber;
 /**
  * Created by darius on 04/12/17.
  */
+import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,9 +14,9 @@ import com.google.firebase.database.DatabaseReference;
 
 public class MessageAdapter extends FirebaseListAdapter<ChatMessage> {
 
-    private MainActivity activity;
+    private ChatActivity activity;
 
-    public MessageAdapter(MainActivity activity, Class<ChatMessage> modelClass, int modelLayout, DatabaseReference ref) {
+    public MessageAdapter(ChatActivity activity, Class<ChatMessage> modelClass, int modelLayout, DatabaseReference ref) {
         super(activity, modelClass, modelLayout, ref);
         this.activity = activity;
     }

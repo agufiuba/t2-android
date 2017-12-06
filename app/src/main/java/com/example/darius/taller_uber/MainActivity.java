@@ -456,57 +456,5 @@ public class MainActivity extends AppCompatActivity
         super.onSaveInstanceState(outState);
     }
 
-    /**
-     * Chat. Fragmento destinado a la parte de chat.
-     * Código extraído del tutorial http://www.devexchanges.info/2016/12/simple-chat-application-using-firebase.html
-     * y adaptado a las necesidades de la aplicación.
-     */
-    public class ChatActivity extends AppCompatActivity{
 
-        String loggedInUserName;
-        ListView listView;
-        ListAdapter adapter;
-        public ChatActivity() {
-            // Required empty public constructor
-        }
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            final EditText input = (EditText) findViewById(R.id.input);
-            listView = (ListView) findViewById(R.id.list);
-            showAllOldMessages();
-            FloatingActionButton fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
-            fab_send.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (input.getText().toString().trim().equals("")) {
-                        //todO
-                    } else {
-                        FirebaseDatabase.getInstance()
-                                .getReference()
-                                .push()
-                                .setValue(new ChatMessage(input.getText().toString(),
-                                        FirebaseAuth.getInstance().getCurrentUser().getDisplayName(),
-                                        FirebaseAuth.getInstance().getCurrentUser().getUid())
-                                );
-                        input.setText("");
-                    }
-                }
-            });
-        }
-
-        public String getUserID(){
-            return loggedInUserName;
-        }
-
-        private void showAllOldMessages() {
-            loggedInUserName = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            Log.d("Main", "user id: " + loggedInUserName);
-
-            adapter = new MessageAdapter(MainActivity.this, ChatMessage.class, R.layout.message_in,
-                    FirebaseDatabase.getInstance().getReference());
-            listView.setAdapter(adapter);
-        }
-    }
 }
