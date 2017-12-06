@@ -150,18 +150,18 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
      * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
      * El boton pasa a ser boton para solicitar el viaje.
      *
-     * @param routeDetails: respuesta al request hecho al APP en requestRoute
+     * @param routeDetails_json: respuesta al request hecho al APP en requestRoute
      */
-    public void startEstado3(JSONObject routeDetails) {
+    public void startEstado3(JSONObject routeDetails_json) {
         try {
             this.estado = ESTADO.ESTADO3;
             stateButton.setText("Solicitar Viaje");
-            RouteDetails routeDetails1 = new RouteDetails(routeDetails.getString("distance"),
-                    routeDetails.getString("time"),
-                    routeDetails.getString("cost"));
-            routes.put(drawRoute(routeDetails.getString("points")),
-                    routeDetails1);
-            showRoadDetails(routeDetails1);
+            RouteDetails routeDetails = new RouteDetails(routeDetails_json.getString("distance"),
+                    routeDetails_json.getString("time"),
+                    routeDetails_json.getString("cost"));
+            routes.put(drawRoute(routeDetails_json.getString("points")),
+                    routeDetails);
+            showRoadDetails(routeDetails);
             stateButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
