@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -27,52 +28,64 @@ import java.util.List;
 public class ChatActivity extends AppCompatActivity {
 
     String loggedInUserName;
-    ListView listView;
     ListAdapter adapter;
-    String peerUID;
-    protected FirebaseDatabase database = FirebaseDatabase.getInstance();
+    EditText input;
+    ListView listView;
+    LinearLayout aviso;
+    FloatingActionButton fab_send;
+    protected FirebaseDatabase database;
 
     DatabaseReference ref;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        peerUID = getIntent().getStringExtra("peerUID");
-        peerUID = "YEN8EoPUY5YF4vEfYnJIlsMsTWT2";
         setContentView(R.layout.chat);
-        final EditText input = (EditText) findViewById(R.id.input);
-        listView = (ListView) findViewById(R.id.list);
-        ref = database.getReference(MainActivity.DBREFERENCES.chats.name()).child(
-                FirebaseAuth.getInstance().getCurrentUser().getUid()+peerUID);
-        showAllOldMessages();
+        load_items();
 
-        FloatingActionButton fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
-        fab_send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (input.getText().toString().trim().equals("")) {
-                    //todO
-                } else {
-//                    FirebaseDatabase.getInstance()
-//                            .getReference()
-//                            .push()
-//                            .setValue(new ChatMessage(input.getText().toString(),
-//                                    FirebaseAuth.getInstance().getCurrentUser().getDisplayName(),
-//                                    FirebaseAuth.getInstance().getCurrentUser().getUid())
-//                            );
-                    ref.push().setValue(new ChatMessage(input.getText().toString(),
-                                    FirebaseAuth.getInstance().getCurrentUser().getDisplayName(),
-                                    FirebaseAuth.getInstance().getCurrentUser().getUid()));
-                    input.setText("");
+        if (!getIntent().getExtras().getString("ChatID").equals("")) {
+            unBlockChat();
+            ref = database.getReference(MainActivity.DBREFERENCES.chats.name()).
+                    child(getIntent().getExtras().getString("ChatID"));
+            showAllOldMessages();
+
+            fab_send.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (!input.getText().toString().trim().equals("")) {
+                        ref.push().setValue(new ChatMessage(input.getText().toString(),
+                                FirebaseAuth.getInstance().getCurrentUser().getDisplayName(),
+                                FirebaseAuth.getInstance().getCurrentUser().getUid()));
+                        input.setText("");
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            blockChat();
+        }
     }
 
+    private void load_items(){
+        database = FirebaseDatabase.getInstance();
+        listView = findViewById(R.id.list);
+        aviso = findViewById(R.id.aviso);
+        fab_send = findViewById(R.id.fab_send);
+        input = findViewById(R.id.input);
+    }
     private void showAllOldMessages() {
         loggedInUserName = FirebaseAuth.getInstance().getCurrentUser().getUid();
         Log.d("Main", "user id: " + loggedInUserName);
 
         adapter = new MessageAdapter(this, ChatMessage.class, R.layout.message_out, ref);
         listView.setAdapter(adapter);
+    }
+
+    private void blockChat(){
+        this.aviso.setVisibility(View.VISIBLE);
+        this.fab_send.setClickable(false);
+    }
+
+    private void unBlockChat(){
+        this.aviso.setVisibility(View.GONE);
+        this.fab_send.setClickable(true);
     }
 }

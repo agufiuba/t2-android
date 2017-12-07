@@ -44,6 +44,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthCredential;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -367,7 +368,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         public void run() {
             user_is_logged_in = false;
             if (this.volleyError.networkResponse == null) {
-                displayErrorMessage("Error de conexión con el servidor");
+                displayErrorMessage("Error de conexión con el servidor" + volleyError.getMessage());
+                //TODO desconectar fb
             } else {
                 int statusCode = this.volleyError.networkResponse.statusCode;
                 if (statusCode == 400) {

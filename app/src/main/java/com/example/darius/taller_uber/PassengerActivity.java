@@ -4,12 +4,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -20,9 +22,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,55 +31,57 @@ import java.util.Map;
 
 /**
  * Created by darius on 01/12/17.
- *  ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
- *  ESTADO1: cuando el usuario puede indicar la posicion de recogida
- *  ESTADO2: cuando el usuario puede indicar el destino del trayecto
- *  ESTADO3: cuando el usuario recibe la hipotética ruta con el costo, distancia
- *           y duración asociados.
- *  ESTADO4: cuando el usuario puede elegir el chofer con el que realizar el trayecto.
- *  ESTADO5: cuando el usuario confirma el viaje y espera al chofer.
+ * ESTADO0: cuando el usuario todavía no inició el proceso para pedir viaje
+ * ESTADO1: cuando el usuario puede indicar la posicion de recogida
+ * ESTADO2: cuando el usuario puede indicar el destino del trayecto
+ * ESTADO3: cuando el usuario recibe la hipotética ruta con el costo, distancia
+ * y duración asociados.
+ * ESTADO4: cuando el usuario puede elegir el chofer con el que realizar el trayecto.
+ * ESTADO5: cuando el usuario confirma el viaje y espera al chofer.
  */
-public class PassengerActivity extends MainActivity implements GoogleMap.OnMarkerClickListener{
+public class PassengerActivity extends MainActivity implements GoogleMap.OnMarkerClickListener {
 
     final String TAG = "PASSENGER_ACTIVITY";
-    /**Passenger**/
+    /**
+     * Passenger
+     **/
     private CardView search_card_view;
     private LinearLayout route_specs;
-    private ScrollView car_specs;
+    private RelativeLayout car_specifications;
     private String selected_driver;
     private String driverID;
     private TextView distancia, duracion, costo;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        car_specs = (ScrollView) findViewById(R.id.car_specs);
-        search_card_view = (CardView) findViewById(R.id.search_card_view);
-        route_specs = (LinearLayout) findViewById(R.id.routeSpecs);
-        distancia = (TextView) findViewById(R.id.distancia);
-        duracion = (TextView) findViewById(R.id.duracion);
-        costo = (TextView) findViewById(R.id.costo);
-        search_card_view = (CardView) findViewById(R.id.search_card_view);
+        car_specifications = findViewById(R.id.car_specifications);
+        search_card_view = findViewById(R.id.search_card_view);
+        route_specs = findViewById(R.id.routeSpecs);
+        distancia = findViewById(R.id.distancia);
+        duracion = findViewById(R.id.duracion);
+        costo = findViewById(R.id.costo);
+        search_card_view = findViewById(R.id.search_card_view);
         on_message_received();
 
         startEstado0();
     }
 
-    private void on_message_received(){
+    private void on_message_received() {
         this.mDataReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(TAG,"Message received");
+                Log.d(TAG, "Message received");
             }
         };
     }
 
     public void startEstado0() {
         this.estado = ESTADO.ESTADO0;
-        Log.d(TAG,"start estado 0");
+        Log.d(TAG, "start estado 0");
 
-        route_specs.setVisibility(View.INVISIBLE);
-        search_card_view.setVisibility(View.INVISIBLE);
+        route_specs.setVisibility(View.GONE);
+        search_card_view.setVisibility(View.GONE);
         stateButton.setText("Indicar Recogida");
         stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,7 +102,23 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
      */
     private void startEstado1() {
         estado = ESTADO.ESTADO1;
-        route_specs.setVisibility(View.INVISIBLE);
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+                marker.setPosition(marker.getPosition());
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+
+            }
+        });
+        route_specs.setVisibility(View.GONE);
         if (originMarker == null) {
             originMarker = mMap.addMarker(new MarkerOptions()
                     .position(mMap.getCameraPosition().target)
@@ -126,7 +143,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     public void startEstado2() {
         estado = ESTADO.ESTADO2;
-        route_specs.setVisibility(View.INVISIBLE);
+        route_specs.setVisibility(View.GONE);
         originMarker.setDraggable(false);
         if (destinationMarker == null) {
             destinationMarker = mMap.addMarker(new MarkerOptions()
@@ -180,43 +197,53 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     private void startEstado4() {
         this.estado = ESTADO.ESTADO4;
-
         String url;
         route_specs.setVisibility(View.GONE);
-        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
-            public void onPolylineClick(Polyline polyline) {
-            }
-        });
-
         class onRequestSuccess extends RequestHandler {
             @Override
             public void run() {
-                displayAvailableDrivers(this.jsonRecv);
-                on_location_database_update();
+                Log.d(TAG, "ESTADO_4 Drivers around request answer: " + this.jsonRecv.toString());
+                startEstado5(this.getJson());
             }
         }
 
         class onRequestFailure extends RequestHandler {
             @Override
             public void run() {
-                //TODO mostrar mensaje de error
-                startEstado0();
+                Log.e(TAG, "Error del servidor: " + this.volleyError.getMessage());
+                Snackbar.make(findViewById(R.id.drawer_layout),
+                        "Error del servidor. Intente de nuevo.\n" + volleyError.getMessage(),
+                        Snackbar.LENGTH_LONG)
+                        .setDuration(4000)
+                        .setAction("Action", null).show();
             }
         }
 
         url = url_drivers + "?pos=" + originMarker.getPosition().toString().replace(" ", "%20");
         Comunicador comunicador = new Comunicador(this.user, this);
         comunicador.requestAuthenticated(new onRequestSuccess(), new onRequestFailure(), url, new JSONObject(), Request.Method.GET);
-        mMap.setOnMarkerClickListener(this);
-        stateButton.setText("Seleccionar Chofer");
+
+    }
+
+    private void startEstado5(JSONObject driversAround) {
+        displayAvailableDrivers(driversAround);
+        on_location_database_update();
+        setMarkerClickListenerToRequestDriverSpecs();
+
         stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (selected_driver != null) {
                     solicitar_chofer(selected_driver);
+                    car_specifications.setVisibility(View.GONE);
                 }
             }
         });
+        stateButton.setText("Seleccionar Chofer");
+    }
+
+    private void setMarkerClickListenerToRequestDriverSpecs() {
+        mMap.setOnMarkerClickListener(this);
     }
 
     /**
@@ -226,7 +253,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
      * será la suma de ID del chofer + ID del pasajero.
      */
     @Override
-    final protected void setDb_chatID(String driverID){
+    final protected void setDb_chatID(String driverID) {
         this.db_chatID = driverID + this.user.getUid();
     }
 
@@ -242,44 +269,51 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     }
 
     private void solicitar_chofer(final String driver) {
-
-        class onSolicitarChoferSuccess extends RequestHandler {
-            @Override
-            public void run() {
-                driverID = driver;
-                notify_driver_is_comming();
-                setDb_chatID(driverID);
-            }
-        }
-
-        class onSolicitarChoferFailure extends RequestHandler {
-            @Override
-            public void run() {
-                final String TAG = "Solicitar Chofer: ";
-                Log.e(TAG, volleyError.getMessage());
-            }
-        }
-
-        JSONObject params = new JSONObject();
         try {
-            params.put("driverID",driver);
-            params.put("from",originMarker.getPosition().toString());
-            params.put("to",destinationMarker.getPosition().toString());
+            JSONObject params = new JSONObject();
+            params.put("driverID", driver);
+            params.put("from", originMarker.getPosition().toString().replace(" ", "%20"));
+            params.put("to", destinationMarker.getPosition().toString().replace(" ", "%20"));
+
+
+            class onSolicitarChoferSuccess extends RequestHandler {
+                @Override
+                public void run() {
+                    Log.d(TAG,"Solicitud de chofer exitosa");
+                    driverID = driver;
+                    notify_driver_is_comming();
+                    setDb_chatID(driverID);
+                }
+            }
+
+            class onSolicitarChoferFailure extends RequestHandler {
+                @Override
+                public void run() {
+                    Log.e(TAG, volleyError.getMessage());
+                    Snackbar.make(findViewById(R.id.drawer_layout),
+                            "Error del servidor. Intente de nuevo.\n" + volleyError.getMessage(),
+                            Snackbar.LENGTH_LONG)
+                            .setDuration(4000)
+                            .setAction("Action", null).show();
+                }
+            }
+
+            Comunicador comunicador = new Comunicador(user, this);
+            comunicador.requestAuthenticated(new onSolicitarChoferSuccess(),
+                    new onSolicitarChoferFailure(),
+                    url_trip_request, params, Request.Method.POST);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Comunicador comunicador = new Comunicador(user,this);
-        comunicador.requestAuthenticated(new onSolicitarChoferSuccess(),
-                new onSolicitarChoferFailure(),
-                url_trip_request, params, Request.Method.POST);
     }
 
-    private void notify_driver_is_comming(){
+    private void notify_driver_is_comming() {
         stateButton.setText("¡El chofer esta en camino!");
         stateButton.setClickable(false);
     }
 
-    private void clearAll(){
+    private void clearAll() {
         mMap.clear();
         originMarker = null;
         destinationMarker = null;
@@ -318,8 +352,13 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         class onRequestFailure extends RequestHandler {
             @Override
             public void run() {
-                //TODO mostrar mensaje de error
-                startEstado0();
+                Snackbar.make(findViewById(R.id.drawer_layout),
+                        "Error del servidor. Intente de nuevo.\n" + volleyError.getMessage(),
+                        Snackbar.LENGTH_LONG)
+                        .setDuration(4000)
+                        .setAction("Action", null).show();
+                Log.e(TAG, volleyError.getMessage());
+
             }
         }
 
@@ -330,6 +369,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     /**
      * displayAvailableDrivers
      * Muestra en pantalla los choferes disponibles alrededor del punto de recogida.
+     *
      * @param app_response: respuesta del app server con los id's de los choferes.
      */
     private void displayAvailableDrivers(final JSONObject app_response) {
@@ -338,7 +378,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             JSONObject json2;
             String id;
             String pos;
-            json1 = app_response.getJSONArray("peers");
+            json1 = app_response.getJSONArray("drivers");
             for (int i = 0; i < json1.length(); i++) {
                 json2 = json1.getJSONObject(i);
                 id = json2.getString("id");
@@ -366,9 +406,10 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     /**
      * showRoadDetails
      * Muestra los detalles de la ruta:
-     *  - costo
-     *  - duracion
-     *  - distancia
+     * - costo
+     * - duracion
+     * - distancia
+     *
      * @param details: detalles de la ruta
      */
     private void showRoadDetails(RouteDetails details) {
@@ -386,6 +427,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
      * si el marcador apretado es uno de los conductores que se muestran en pantalla.
      * En caso de serlo, se le hace un request al servidor para recibir los detalles
      * del vehículo.
+     *
      * @param marker
      * @return
      */
@@ -396,6 +438,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
                 @Override
                 public void run() {
                     selected_driver = (String) marker.getTag();
+                    Log.d(TAG, "onMarkerClick. Selected_driver: " + selected_driver);
                     marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.selected_peer_location));
                     show_car_specs(jsonRecv);
                 }
@@ -413,7 +456,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             Comunicador comunicador = new Comunicador(this.user, this);
             comunicador.requestAuthenticated(new onCarSpecsRequestSuccess(),
                     new onCarSpecsRequestFailure(), url,
-                    new JSONObject(),Request.Method.GET);
+                    new JSONObject(), Request.Method.GET);
         }
 
         return false;
@@ -422,22 +465,25 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     /**
      * show_car_specs
      * Muestra en pantalla los detalles de un determinado auto.
+     *
      * @param user_info: respuesta del servidor con los detalles del chofer
      *                   y de su auto.
      */
-    private void show_car_specs(JSONObject user_info) {
+    protected void show_car_specs(JSONObject user_info) {
         try {
+            Log.d(TAG, "ESTADO 4/ Show_car_specs. User_info: " + user_info.toString());
             JSONObject carSpecs = null;
-            carSpecs = user_info.getJSONObject("car");
+            user_info.getString("last_name");
+//            carSpecs = user_info.getJSONObject("last_name");
 
-            TextView nombre = (TextView) findViewById(R.id.car_specs_nombre);
-            TextView color = (TextView) findViewById(R.id.car_specs_color);
-            TextView patente = (TextView) findViewById(R.id.car_specs_patente);
-            TextView estado = (TextView) findViewById(R.id.car_specs_estado);
-            TextView aire = (TextView) findViewById(R.id.car_specs_aire);
-            TextView musica = (TextView) findViewById(R.id.car_specs_musica);
-            TextView anio = (TextView) findViewById(R.id.car_specs_anio);
-            TextView modelo = (TextView) findViewById(R.id.car_specs_modelo);
+            TextView nombre = findViewById(R.id.car_specs_nombre);
+            TextView color = findViewById(R.id.car_specs_color);
+            TextView patente = findViewById(R.id.car_specs_patente);
+            TextView estado = findViewById(R.id.car_specs_estado);
+            TextView aire = findViewById(R.id.car_specs_aire);
+            TextView musica = findViewById(R.id.car_specs_musica);
+            TextView anio = findViewById(R.id.car_specs_anio);
+            TextView modelo = findViewById(R.id.car_specs_modelo);
 
 //            String name = user_info.getString("name") + " " + user_info.getString("last_name");
 //            nombre.setText(name);
@@ -459,7 +505,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             musica.setText("Clasica");
             modelo.setText("S10");
 
-            car_specs.setVisibility(View.VISIBLE);
+            this.car_specifications.setVisibility(View.VISIBLE);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -467,29 +513,29 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     @Override
     public void onBackPressed() {
-            switch (estado) {
-                case ESTADO4:
-                    break;
-                case ESTADO3:
-                    for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()) {
-                        entry.getKey().remove();
-                    }
-                    routes.clear();
-                    route_specs.setVisibility(View.INVISIBLE);
-                    startEstado2();
-                    break;
-                case ESTADO2:
-                    destinationMarker.remove();
-                    destinationMarker = null;
-                    startEstado1();
-                    break;
-                case ESTADO1:
-                    originMarker.remove();
-                    originMarker = null;
-                    startEstado0();
-                    break;
-                case ESTADO0:
-                    break;
-            }
+        switch (estado) {
+            case ESTADO4:
+                break;
+            case ESTADO3:
+                for (Map.Entry<Polyline, RouteDetails> entry : routes.entrySet()) {
+                    entry.getKey().remove();
+                }
+                routes.clear();
+                route_specs.setVisibility(View.GONE);
+                startEstado2();
+                break;
+            case ESTADO2:
+                destinationMarker.remove();
+                destinationMarker = null;
+                startEstado1();
+                break;
+            case ESTADO1:
+                originMarker.remove();
+                originMarker = null;
+                startEstado0();
+                break;
+            case ESTADO0:
+                break;
+        }
     }
 }

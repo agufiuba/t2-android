@@ -129,17 +129,14 @@
 
         </LinearLayout>
 
-        <ScrollView
-            android:id="@+id/car_specs"
-            android:visibility="gone"
-            android:background="@color/cardview_light_background"
-            android:layout_gravity="center|bottom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
 
             <RelativeLayout
-                android:layout_width="wrap_content"
+                android:id="@+id/car_specifications"
+                android:background="@color/cardview_light_background"
+                android:layout_gravity="center|bottom"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -336,7 +333,6 @@
                 </LinearLayout>
 
             </RelativeLayout>
-        </ScrollView>
 
         <Button
             android:id="@+id/stateButton"
@@ -349,8 +345,5 @@
             android:text="Indicar Recogida"/>
 
     </LinearLayout>
-
-
-
 
 </android.support.design.widget.CoordinatorLayout>

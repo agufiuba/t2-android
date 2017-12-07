@@ -36,6 +36,19 @@ http://www.devexchanges.info/2016/12/simple-chat-application-using-firebase.html
             android:hint="Input" />
     </android.support.design.widget.TextInputLayout>
 
+    <LinearLayout
+        android:id="@+id/aviso"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text = "¡Todavía no hay un viaje establecido!"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"

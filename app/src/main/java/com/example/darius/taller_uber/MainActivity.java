@@ -73,6 +73,7 @@ import java.util.Map;
 abstract public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local, USER_TYPE {
 
+    protected String TAG = "Main_Activity";
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
@@ -201,13 +202,19 @@ abstract public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
+        Intent intent;
         int id = item.getItemId();
 
         if (id == R.id.perfil) {
-            Intent intent = new Intent(this, ProfileActivity.class);
+            intent = new Intent(this, ProfileActivity.class);
             startActivity(intent);
         } else if (id == R.id.chat) {
-            Intent intent = new Intent(this, ChatActivity.class);
+            intent = new Intent(this, ChatActivity.class);
+            if (this.db_chatID == null){
+                intent.putExtra("ChatID", "");
+            } else {
+                intent.putExtra("ChatID", this.db_chatID);
+            }
             startActivity(intent);
         } else if (id == R.id.nav_manage) {
 
@@ -215,7 +222,7 @@ abstract public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.logout) {
             FirebaseAuth.getInstance().signOut();
-            Intent intent = new Intent(this, LoginActivity.class);
+            intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
 
@@ -232,11 +239,11 @@ abstract public class MainActivity extends AppCompatActivity
      * @return polyLine.ID
      */
     protected Polyline drawRoute(String encodedPath) {
+        Log.d(TAG,"drawRoute");
         List<LatLng> list = PolyUtil.decode(encodedPath);
         PolylineOptions ruta = new PolylineOptions();
         ruta.addAll(list);
         Polyline polyline = mMap.addPolyline(ruta);
-        polyline.setClickable(true);
         return polyline;
     }
 
@@ -434,7 +441,7 @@ abstract public class MainActivity extends AppCompatActivity
         value = value.substring(10, value.length() - 1);
         LatLng latLng = new LatLng(
                 Double.parseDouble(value.substring(0, value.indexOf(","))),
-                Double.parseDouble(value.substring(value.indexOf(",") + 1, 21)));
+                Double.parseDouble(value.substring(value.indexOf(",") + 1, value.length())));
         if (peers.containsKey(key)) {
             peers.get(key).setPosition(latLng);
         } else {
