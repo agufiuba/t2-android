@@ -5,6 +5,12 @@ package com.example.darius.taller_uber;
  */
 import java.util.Date;
 
+
+/**
+ * ChatMessage. Para encapsular los mensajes.
+ * Código extraído del tutorial http://www.devexchanges.info/2016/12/simple-chat-application-using-firebase.html
+ * y adaptado a las necesidades de la aplicación.
+ */
 public class ChatMessage {
     private String messageText;
     private String messageUser;

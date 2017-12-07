@@ -5,6 +5,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -21,7 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.List;
 
 /**
- * Chat. Fragmento destinado a la parte de chat.
+ * Chat. Actividad destinada a la parte de chat.
  * Código extraído del tutorial http://www.devexchanges.info/2016/12/simple-chat-application-using-firebase.html
  * y adaptado a las necesidades de la aplicación.
  */
@@ -34,7 +35,6 @@ public class ChatActivity extends AppCompatActivity {
     LinearLayout aviso;
     FloatingActionButton fab_send;
     protected FirebaseDatabase database;
-
     DatabaseReference ref;
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,6 +46,10 @@ public class ChatActivity extends AppCompatActivity {
             unBlockChat();
             ref = database.getReference(MainActivity.DBREFERENCES.chats.name()).
                     child(getIntent().getExtras().getString("ChatID"));
+//            Para mockupear, comentar las dos lineas de arriba y descomentar las dos de abajo:
+//            ref = database.getReference(MainActivity.DBREFERENCES.chats.name()).
+//                    child("F28ldLVC5AfgwixnphJrmIWFPCN2YEN8EoPUY5YF4vEfYnJIlsMsTWT2");
+
             showAllOldMessages();
 
             fab_send.setOnClickListener(new View.OnClickListener() {
@@ -88,4 +92,6 @@ public class ChatActivity extends AppCompatActivity {
         this.aviso.setVisibility(View.GONE);
         this.fab_send.setClickable(true);
     }
+
+
 }
