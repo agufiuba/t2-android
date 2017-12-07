@@ -1,8 +1,11 @@
 package com.example.darius.taller_uber;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.CardView;
@@ -12,7 +15,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -165,36 +167,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         });
     }
 
-    /**
-     * startEstado3
-     * Habiendose recibido el json con la ruta y los detalles de la ruta,
-     * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
-     * El boton pasa a ser boton para solicitar el viaje.
-     *
-     * @param routeDetails_json: respuesta al request hecho al APP en requestRoute
-     */
-    public void startEstado3(JSONObject routeDetails_json) {
-        try {
-            this.estado = ESTADO.ESTADO3;
-            stateButton.setText("Solicitar Viaje");
-            RouteDetails routeDetails = new RouteDetails(routeDetails_json.getString("distance"),
-                    routeDetails_json.getString("time"),
-                    routeDetails_json.getString("cost"));
-            routes.put(drawRoute(routeDetails_json.getString("points")),
-                    routeDetails);
-            showRoadDetails(routeDetails);
-            stateButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    startEstado4();
-                }
-            });
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void startEstado4() {
         this.estado = ESTADO.ESTADO4;
         String url;
@@ -225,6 +197,37 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     }
 
+    /**
+     * startEstado3
+     * Habiendose recibido el json con la ruta y los detalles de la ruta,
+     * dibujamos en el mapa el trayecto y exponemos los precios, duracion, distancia.
+     * El boton pasa a ser boton para solicitar el viaje.
+     *
+     * @param routeDetails_json: respuesta al request hecho al APP en requestRoute
+     */
+    public void startEstado3(JSONObject routeDetails_json) {
+        try {
+            this.estado = ESTADO.ESTADO3;
+            stateButton.setText("Solicitar Viaje");
+            RouteDetails routeDetails = new RouteDetails(routeDetails_json.getString("distance"),
+                    routeDetails_json.getString("time"),
+                    routeDetails_json.getString("cost"));
+            routes.put(drawRoute(routeDetails_json.getString("points")),
+                    routeDetails);
+            showRoadDetails(routeDetails);
+            stateButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startEstado4();
+//                    select_payment_method();
+                }
+            });
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void startEstado5(JSONObject driversAround) {
         displayAvailableDrivers(driversAround);
         on_location_database_update();
@@ -234,12 +237,23 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             @Override
             public void onClick(View view) {
                 if (selected_driver != null) {
-                    solicitar_chofer(selected_driver);
+                    select_payment_method();
                     car_specifications.setVisibility(View.GONE);
                 }
             }
         });
         stateButton.setText("Seleccionar Chofer");
+    }
+
+    private void startEstado6(){
+        stateButton.setText("Indicar Viaje Finalizado");
+        stateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearAll();
+                startEstado0();
+            }
+        });
     }
 
     private void setMarkerClickListenerToRequestDriverSpecs() {
@@ -268,21 +282,23 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         }
     }
 
-    private void solicitar_chofer(final String driver) {
+    private void solicitar_chofer(final String driver, String paymentMethod) {
         try {
+            select_payment_method();
             JSONObject params = new JSONObject();
-            params.put("driverID", driver);
+            params.put("driverID", selected_driver);
             params.put("from", originMarker.getPosition().toString().replace(" ", "%20"));
             params.put("to", destinationMarker.getPosition().toString().replace(" ", "%20"));
-
+            params.put("paymentMethod",paymentMethod);
 
             class onSolicitarChoferSuccess extends RequestHandler {
                 @Override
                 public void run() {
                     Log.d(TAG,"Solicitud de chofer exitosa");
                     driverID = driver;
-                    notify_driver_is_comming();
                     setDb_chatID(driverID);
+                    notify_driver_is_comming();
+                    startEstado6();
                 }
             }
 
@@ -313,12 +329,121 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         stateButton.setClickable(false);
     }
 
+    private void select_payment_method(){
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(this);
+        }
+        builder.setTitle("Metodo de pago")
+                .setMessage("Seleccione un método de pago:")
+                .setPositiveButton("efectivo", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        solicitar_chofer(driverID,"cash");
+                    }
+                })
+                .setNeutralButton("tarjeta", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        solicitar_chofer(driverID,"card");
+                    }
+                })
+                .setIcon(R.drawable.ic_card)
+                .show();
+    }
+
+    private void show_payment_method_result(boolean success){
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(this);
+        }
+
+        if(success){
+            builder.setTitle("Pago Exitoso")
+                    .setMessage("Se realizó el pago con éxito")
+                    .setIcon(R.drawable.ic_card)
+                    .show();
+        } else {
+            builder.setTitle("Pago Fallido")
+                    .setMessage("No pudo realizarse el pago")
+                    .setIcon(R.drawable.ic_card)
+                    .show();
+        }
+    }
+
     private void clearAll() {
         mMap.clear();
         originMarker = null;
         destinationMarker = null;
     }
 
+//    private void payTrip(final String metodo){
+////        String url = "http://192.168.99.100:4000/mail/";
+////        String url = "http://192.168.43.137:4000/mail/";
+//        class onPaymentARequestSuccess extends RequestHandler {
+//            @Override
+//            public void run(){
+//                try {
+//
+//                    //                    postPaymentMethod(this.jsonRecv.getString("mail"), metodo);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//
+//        class onPaymentARequestFailure extends RequestHandler {
+//            @Override
+//            public void run(){
+//                show_payment_method_result(false);
+//            }
+//        }
+//
+//        Comunicador comunicador = new Comunicador(this.user,this);
+//        JSONObject params = new JSONObject();
+//        try {
+//            params.put("driverID",this.driverID);
+//            params.put("from",originMarker.getPosition());
+//            params.put("to",destinationMarker.getPosition());
+//            params.put("paymentMethod",metodo);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+////        String urlid = url + this.driverID;
+//        String urlid = url + "1";
+//        comunicador.requestAuthenticated(new onPaymentARequestSuccess(),
+//                new onPaymentARequestFailure(),url_trip_request,params, Request.Method.POST);
+//    }
+
+//    private void postPaymentMethod(String mail, String method){
+//
+////        String url = "http://192.168.99.100:4000/trips/" + this.user.getEmail() + "/" + mail + "/" +
+////                distancia.getText().toString() + "?method=" + method;
+//        String url = "http://192.168.43.137:4000/trips/" + this.user.getEmail() + "/" + mail + "/" +
+//                distancia.getText().toString().replace(" km","") + "?method=" + method;
+//        class onPaymentPostRequestSuccess extends RequestHandler {
+//            @Override
+//            public void run(){
+//                show_payment_method_result(true);
+//                clearAll();
+//                startEstado0();
+//            }
+//        }
+//
+//        class onPaymentPostRequestFailure extends RequestHandler {
+//            @Override
+//            public void run(){
+//                show_payment_method_result(false);
+//            }
+//        }
+//
+//        Comunicador comunicador = new Comunicador(this.user,this);
+//        comunicador.requestFree(new onPaymentPostRequestSuccess(),
+//                new onPaymentPostRequestFailure(),url,new JSONObject(), Request.Method.POST);
+//    }
     /**
      * requestRoute
      * El usuario ya tiene determinado de adonde a adonde ir
@@ -384,8 +509,8 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
                 id = json2.getString("id");
                 pos = json2.getString("pos");
                 if (!peers.containsKey(id)) {
-                    String lat = pos.substring(7, 18);
-                    String lng = pos.substring(25, 36);
+                    String lat = pos.substring(0,pos.indexOf(";"));
+                    String lng = pos.substring(pos.indexOf(";")+1, pos.length());
                     LatLng latLng = new LatLng(
                             Double.parseDouble(lat),
                             Double.parseDouble(lng));
