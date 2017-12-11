@@ -53,6 +53,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
     private String selected_driver;
     private String driverID;
     private TextView distancia, duracion, costo;
+    private String payment_method;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -284,7 +285,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 
     private void solicitar_chofer(final String driver, String paymentMethod) {
         try {
-            select_payment_method();
             JSONObject params = new JSONObject();
             params.put("driverID", selected_driver);
             params.put("from", originMarker.getPosition().toString().replace(" ", "%20"));
@@ -341,12 +341,14 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
                 .setPositiveButton("efectivo", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        solicitar_chofer(driverID,"cash");
+                        payment_method = "cash";
+                        solicitar_chofer(selected_driver,payment_method);
                     }
                 })
                 .setNeutralButton("tarjeta", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        solicitar_chofer(driverID,"card");
+                        payment_method = "card";
+                        solicitar_chofer(selected_driver,payment_method);
                     }
                 })
                 .setIcon(R.drawable.ic_card)
@@ -380,70 +382,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         destinationMarker = null;
     }
 
-//    private void payTrip(final String metodo){
-////        String url = "http://192.168.99.100:4000/mail/";
-////        String url = "http://192.168.43.137:4000/mail/";
-//        class onPaymentARequestSuccess extends RequestHandler {
-//            @Override
-//            public void run(){
-//                try {
-//
-//                    //                    postPaymentMethod(this.jsonRecv.getString("mail"), metodo);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//
-//        class onPaymentARequestFailure extends RequestHandler {
-//            @Override
-//            public void run(){
-//                show_payment_method_result(false);
-//            }
-//        }
-//
-//        Comunicador comunicador = new Comunicador(this.user,this);
-//        JSONObject params = new JSONObject();
-//        try {
-//            params.put("driverID",this.driverID);
-//            params.put("from",originMarker.getPosition());
-//            params.put("to",destinationMarker.getPosition());
-//            params.put("paymentMethod",metodo);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-////        String urlid = url + this.driverID;
-//        String urlid = url + "1";
-//        comunicador.requestAuthenticated(new onPaymentARequestSuccess(),
-//                new onPaymentARequestFailure(),url_trip_request,params, Request.Method.POST);
-//    }
 
-//    private void postPaymentMethod(String mail, String method){
-//
-////        String url = "http://192.168.99.100:4000/trips/" + this.user.getEmail() + "/" + mail + "/" +
-////                distancia.getText().toString() + "?method=" + method;
-//        String url = "http://192.168.43.137:4000/trips/" + this.user.getEmail() + "/" + mail + "/" +
-//                distancia.getText().toString().replace(" km","") + "?method=" + method;
-//        class onPaymentPostRequestSuccess extends RequestHandler {
-//            @Override
-//            public void run(){
-//                show_payment_method_result(true);
-//                clearAll();
-//                startEstado0();
-//            }
-//        }
-//
-//        class onPaymentPostRequestFailure extends RequestHandler {
-//            @Override
-//            public void run(){
-//                show_payment_method_result(false);
-//            }
-//        }
-//
-//        Comunicador comunicador = new Comunicador(this.user,this);
-//        comunicador.requestFree(new onPaymentPostRequestSuccess(),
-//                new onPaymentPostRequestFailure(),url,new JSONObject(), Request.Method.POST);
-//    }
     /**
      * requestRoute
      * El usuario ya tiene determinado de adonde a adonde ir

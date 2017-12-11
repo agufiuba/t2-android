@@ -13,6 +13,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONObject;
@@ -27,6 +28,7 @@ import org.json.JSONObject;
 public class DriverActivity extends MainActivity {
     private String TAG = "DRIVER_ACTIVITY";
     private String passengerID;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,6 +36,13 @@ public class DriverActivity extends MainActivity {
         startEstado0();
     }
 
+    /**
+     * on_message_received
+     * Realiza el handling a notificaciones de firebase de tipo data.
+     * El handling consiste en indicar al chofer el origen, destino y la ruta a
+     * tomar.
+     * Se puede implementar el handling de otro tipo de notificaciones tambien.
+     */
     private void on_message_received() {
         this.mDataReceiver = new BroadcastReceiver() {
             @Override
@@ -42,21 +51,37 @@ public class DriverActivity extends MainActivity {
                 passengerID = intent.getExtras().getString("passengerID");
                 LatLng from = processCoordinates(intent.getExtras().getString("from"));
                 LatLng to = processCoordinates(intent.getExtras().getString("to"));
-                if (originMarker == null) {
-                    originMarker = mMap.addMarker(new MarkerOptions()
-                            .position(from)
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
-                }
-                if (destinationMarker == null) {
-                    destinationMarker = mMap.addMarker(new MarkerOptions()
-                            .position(to)
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
-                }
+                String passengerName = intent.getExtras().getString("name");
+                String passengerLastName = intent.getExtras().getString("last_name");
+                String polyline = intent.getExtras().getString("polyline");
+                originMarker = mMap.addMarker(new MarkerOptions()
+                        .position(from)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
+
+                destinationMarker = mMap.addMarker(new MarkerOptions()
+                        .position(to)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.destino_pin)));
+
+                drawRoute(polyline);
                 setDb_chatID(passengerID);
                 show_passenger_location(passengerID);
                 startEstado2();
             }
         };
+        this.mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //TODO
+            }
+        };
+
+        this.mNotificationReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //TODO
+            }
+        };
+
 
     }
 
@@ -67,24 +92,24 @@ public class DriverActivity extends MainActivity {
      * será la suma de ID del chofer + ID del pasajero.
      */
     @Override
-    final protected void setDb_chatID(String passengerID){
+    final protected void setDb_chatID(String passengerID) {
         this.db_chatID = this.user.getUid() + passengerID;
     }
 
-    private void show_passenger_location(String passengerID){
-        if(!this.peers.containsKey(passengerID)){
-            LatLng latLng = new LatLng(0,0);
+    private void show_passenger_location(String passengerID) {
+        if (!this.peers.containsKey(passengerID)) {
+            LatLng latLng = new LatLng(0, 0);
             Marker passengerMarker = mMap.addMarker(new MarkerOptions()
                     .position(latLng)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.peer_location)));
-            peers.put(passengerID,passengerMarker);
+            peers.put(passengerID, passengerMarker);
         }
         on_location_database_update();
     }
 
     public void startEstado0() {
         this.estado = ESTADO.ESTADO0;
-        Log.d(TAG,"estado 0. Pantalla de espera del chofer con boton para indicar que está disponible");
+        Log.d(TAG, "estado 0. Pantalla de espera del chofer con boton para indicar que está disponible");
         stateButton.setText("Estoy Disponible");
         stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +121,7 @@ public class DriverActivity extends MainActivity {
 
     private void startEstado1() {
         this.estado = ESTADO.ESTADO1;
-        Log.d(TAG,"estado 1");
+        Log.d(TAG, "estado 1");
         stateButton.setText("Esperando Viaje...");
         stateButton.setClickable(false);
         //TODO: mostrar pantalla de espera
@@ -115,6 +140,12 @@ public class DriverActivity extends MainActivity {
         });
     }
 
+    private void clearMap(){
+        this.mMap.clear();
+        originMarker = null;
+        destinationMarker = null;
+    }
+
     /**
      * disponibilizar_chofer
      * Le comunica al servidor que el cliente chofer se encuentra disponible
@@ -126,7 +157,7 @@ public class DriverActivity extends MainActivity {
             @Override
             public void run() {
                 String TAG = "DISPONIBILIZAR_CHOFER";
-                Log.d(TAG,"request exitoso");
+                Log.d(TAG, "request exitoso");
                 startEstado1();
             }
         }
@@ -135,7 +166,7 @@ public class DriverActivity extends MainActivity {
             @Override
             public void run() {
                 String TAG = "DISPONIBILIZAR_CHOFER";
-                Log.e(TAG,"request fallido. \nError: " + volleyError.getMessage());
+                Log.e(TAG, "request fallido. \nError: " + volleyError.getMessage());
                 Snackbar.make(stateButton, "Error del servidor", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }

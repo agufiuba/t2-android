@@ -216,10 +216,6 @@ abstract public class MainActivity extends AppCompatActivity
                 intent.putExtra("ChatID", this.db_chatID);
             }
             startActivity(intent);
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_send) {
-
         } else if (id == R.id.logout) {
             FirebaseAuth.getInstance().signOut();
             intent = new Intent(this, LoginActivity.class);
@@ -399,7 +395,7 @@ abstract public class MainActivity extends AppCompatActivity
         coords = coords.substring(10, coords.length() - 1);
         LatLng latLng = new LatLng(
                 Double.parseDouble(coords.substring(0, coords.indexOf(","))),
-                Double.parseDouble(coords.substring(coords.indexOf(",") + 1, 21)));
+                Double.parseDouble(coords.substring(coords.indexOf(",") + 1, coords.length() - 1)));
         return latLng;
     }
 
