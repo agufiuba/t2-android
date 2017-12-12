@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Taller_Uber.iml" filepath="$PROJECT_DIR$/Taller_Uber.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Taller_Uber.iml" filepath="$PROJECT_DIR$/Taller_Uber.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/t2-android.iml" filepath="$PROJECT_DIR$/t2-android.iml" />
     </modules>

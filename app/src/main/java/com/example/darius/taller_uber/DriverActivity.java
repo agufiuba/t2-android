@@ -130,11 +130,13 @@ public class DriverActivity extends MainActivity {
     private void startEstado2() {
         this.estado = ESTADO.ESTADO2;
         Log.d(TAG, "estado 2");
-        stateButton.setText("Viaje Realizado");
+        stateButton.setText("Indicar viaje finalizado");
         stateButton.setClickable(true);
         stateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                clearMap();
+                setDb_chatID("");
                 startEstado0();
             }
         });

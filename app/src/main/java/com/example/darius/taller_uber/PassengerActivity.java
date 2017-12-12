@@ -249,6 +249,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
             @Override
             public void onClick(View view) {
                 clearAll();
+                setDb_chatID("");
                 startEstado0();
             }
         });
