@@ -413,10 +413,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void startMainActivity() {
-        switch (this.client_type){
+        switch (this.client_type) {
             case (USER_TYPE.PASSENGER):
-               startActivity(new Intent(this, PassengerActivity.class));
-               break;
+                startActivity(new Intent(this, PassengerActivity.class));
+                break;
             case (USER_TYPE.DRIVER):
                 startActivity(new Intent(this, DriverActivity.class));
                 break;
@@ -470,7 +470,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mEmailView.setAdapter(adapter);
     }
-
 
     private interface ProfileQuery {
         String[] PROJECTION = {

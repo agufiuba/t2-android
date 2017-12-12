@@ -24,7 +24,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".LoginActivity"
-            android:launchMode="singleInstance"
+            android:launchMode="standard"
             android:label="Taller_Uber">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

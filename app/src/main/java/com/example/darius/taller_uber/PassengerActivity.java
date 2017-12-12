@@ -128,7 +128,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.recogida_pin)));
         }
         originMarker.setDraggable(true);
-        configureAutocompleteFragment();
         stateButton.setVisibility(View.GONE);
         stateButton.setText("Indicar Destino");
         stateButton.setVisibility(View.VISIBLE);
@@ -155,7 +154,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         }
         destinationMarker.setDraggable(true);
         autocompleteFragment.setText("");
-        configureAutocompleteFragment();
         stateButton.setVisibility(View.GONE);
         stateButton.setText("Previsualizar Viaje");
         stateButton.setVisibility(View.VISIBLE);
@@ -220,7 +218,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
                 @Override
                 public void onClick(View view) {
                     startEstado4();
-//                    select_payment_method();
                 }
             });
 
@@ -272,16 +269,6 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
         this.db_chatID = driverID + this.user.getUid();
     }
 
-    protected void configureAutocompleteFragment() {
-        switch (estado) {
-            case ESTADO1:
-                autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelection(originMarker));
-                break;
-            case ESTADO2:
-                autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelection(destinationMarker));
-                break;
-        }
-    }
 
     private void solicitar_chofer(final String driver, String paymentMethod) {
         try {

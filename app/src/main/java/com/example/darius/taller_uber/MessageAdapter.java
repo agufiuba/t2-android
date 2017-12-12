@@ -1,8 +1,5 @@
 package com.example.darius.taller_uber;
 
-/**
- * Created by darius on 04/12/17.
- */
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateFormat;
 import android.view.View;
@@ -13,6 +10,11 @@ import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 
+/**
+ * MessageAdapter (Adaptador destinado al manejo del ListView del chat)
+ * Código extraído del tutorial http://www.devexchanges.info/2016/12/simple-chat-application-using-firebase.html
+ * y adaptado a las necesidades de la aplicación.
+ */
 public class MessageAdapter extends FirebaseListAdapter<ChatMessage> {
 
     private ChatActivity activity;
@@ -53,14 +55,11 @@ public class MessageAdapter extends FirebaseListAdapter<ChatMessage> {
 
     @Override
     public int getViewTypeCount() {
-        // return the total number of view types. this value should never change
-        // at runtime
         return 2;
     }
 
     @Override
     public int getItemViewType(int position) {
-        // return a value between 0 and (getViewTypeCount - 1)
         return position % 2;
     }
 }

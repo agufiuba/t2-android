@@ -46,11 +46,7 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
     final String[] estados = {"Excelente", "Bueno", "Destartalado", "PicaPiedra"};
     final String[] aire_options = {"Sí", "No"};
     final String[] musicas = {"Clasica", "Jazz", "Tango", "Rock", "Folklore", "Pop"};
-//    private String[] modelos;
-//    private String[] colores;
-//    private String[] estados;
-//    private String[] aire_options;
-//    private String[] musicas;
+
 
     private String modelo = null;
     private String color = null;
@@ -84,7 +80,6 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
 
         configure_layout_elements();
         comunicador = new Comunicador(user, this);
-//        requestCharSequences();
     }
 
     private void load_layout_elements() {
@@ -164,65 +159,6 @@ public class DriverSignUpActivity extends AppCompatActivity implements URL_local
                 attemptRegister();
             }
         });
-    }
-
-    private class onRequestSequencesSuccess extends RequestHandler {
-        @Override
-        public void run() {}
-    }
-
-    private class onRequestSequencesError extends RequestHandler {
-        @Override
-        public void run(){}
-    }
-
-//    /**
-//     * requestCharSequences
-//     * Solicita al app server los parametros de las opciones modelos,
-//     * colores, estados, aire y musicas para que ingrese el usuario que se registra.
-//     */
-//    private void requestCharSequences(){
-//        String url_modelos = url + "parameters/car/model";
-//        String url_colores = url + "parameters/car/colour";
-//        String url_estados = url + "parameters/car/state";
-//        String url_aire = url + "parameters/car/air_conditioner";
-//        String url_musicas = url + "parameters/car/music";
-//
-//        final JSONObject jsonObject = new JSONObject();
-//        onRequestSequencesSuccess success = new onRequestSequencesSuccess();
-//        onRequestSequencesError error = new onRequestSequencesError();
-//        try {
-//            jsonObject.put("nana","jaja");
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        comunicador.requestFree(success, error,url_modelos,jsonObject,Request.Method.GET);
-//        modelos = setFromJson(comunicador.getAnswerJSON());
-//        comunicador.requestFree(success, error,url_colores,jsonObject,Request.Method.GET);
-//        colores = setFromJson(comunicador.getAnswerJSON());
-//        comunicador.requestFree(success, error,url_estados,jsonObject,Request.Method.GET);
-//        estados = setFromJson(comunicador.getAnswerJSON());
-//        comunicador.requestFree(success, error,url_aire,jsonObject,Request.Method.GET);
-//        aire_options = setFromJson(comunicador.getAnswerJSON());
-//        comunicador.requestFree(success, error,url_musicas,jsonObject,Request.Method.GET);
-//        musicas = setFromJson(comunicador.getAnswerJSON());
-//    }
-
-    private String[] setFromJson(JSONObject jsonObject){
-        String[] options;
-        JSONArray arr;
-        List<String> _options = new ArrayList<String>();
-        try {
-            arr = jsonObject.getJSONArray("parameters");
-
-            for(int i = 0; i < arr.length(); i++){
-                _options.add(arr.getString(i));
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        options =(String[])_options.toArray();
-        return options;
     }
 
     private void popup_modelo() {

@@ -69,7 +69,6 @@ import java.util.List;
 import java.util.Map;
 
 
-
 abstract public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, URL_local, USER_TYPE {
 
@@ -78,8 +77,13 @@ abstract public class MainActivity extends AppCompatActivity
     protected static final String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
 
     protected enum ESTADO {ESTADO0, ESTADO1, ESTADO2, ESTADO3, ESTADO4;}
-    protected enum DBREFERENCES {localizations, chats, notifications};
-    /**Comun**/
+
+    protected enum DBREFERENCES {localizations, chats, notifications}
+
+    ;
+    /**
+     * Comun
+     **/
     protected String client_type;
     protected String peerID;
     protected ESTADO estado;
@@ -94,18 +98,26 @@ abstract public class MainActivity extends AppCompatActivity
     protected Map<String, Marker> peers = new HashMap<>();
     protected PlaceAutocompleteFragment autocompleteFragment;
 
-    /**Firebase Database**/
+    /**
+     * Firebase Database
+     **/
     protected FirebaseDatabase database = FirebaseDatabase.getInstance();
     protected DatabaseReference dbReference;
-        /**Location**/
+    /**
+     * Location
+     **/
     protected boolean mRequestingLocationUpdates = false;
     protected LocationCallback mLocationCallback;
     protected LocationRequest mLocationRequest;
-        /**Messaging Service**/
+    /**
+     * Messaging Service
+     **/
     protected BroadcastReceiver mDataReceiver;
     protected BroadcastReceiver mMessageReceiver;
     protected BroadcastReceiver mNotificationReceiver;
-    /**Chat**/
+    /**
+     * Chat
+     **/
     protected String db_chatID;
 
     @Override
@@ -151,7 +163,7 @@ abstract public class MainActivity extends AppCompatActivity
         listen_to_messages();
     }
 
-    protected void listen_to_messages(){
+    protected void listen_to_messages() {
         LocalBroadcastManager.getInstance(this).registerReceiver((mDataReceiver),
                 new IntentFilter(FCM_MESSAGE_TYPE.FCM_DATA.name())
         );
@@ -169,7 +181,7 @@ abstract public class MainActivity extends AppCompatActivity
         stop_listening_to_messages();
     }
 
-    protected void stop_listening_to_messages(){
+    protected void stop_listening_to_messages() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mDataReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mNotificationReceiver);
@@ -210,7 +222,7 @@ abstract public class MainActivity extends AppCompatActivity
             startActivity(intent);
         } else if (id == R.id.chat) {
             intent = new Intent(this, ChatActivity.class);
-            if (this.db_chatID == null){
+            if (this.db_chatID == null) {
                 intent.putExtra("ChatID", "");
             } else {
                 intent.putExtra("ChatID", this.db_chatID);
@@ -235,7 +247,7 @@ abstract public class MainActivity extends AppCompatActivity
      * @return polyLine.ID
      */
     protected Polyline drawRoute(String encodedPath) {
-        Log.d(TAG,"drawRoute");
+        Log.d(TAG, "drawRoute");
         List<LatLng> list = PolyUtil.decode(encodedPath);
         PolylineOptions ruta = new PolylineOptions();
         ruta.addAll(list);
@@ -247,9 +259,10 @@ abstract public class MainActivity extends AppCompatActivity
     protected class RouteDetails {
         /**
          * Detalles de la ruta
+         *
          * @param distancia: distancia de la ruta
-         * @param duracion: duracion del trayecto
-         * @param costo: costo del viaje
+         * @param duracion:  duracion del trayecto
+         * @param costo:     costo del viaje
          */
         RouteDetails(String distancia, String duracion, String costo) {
             this.distancia = distancia;
@@ -359,6 +372,7 @@ abstract public class MainActivity extends AppCompatActivity
     /**
      * draw_client_position
      * Dibuja en el mapa con un marker azul la posición del cliente.
+     *
      * @param location: localizacion del cliente
      */
     protected void draw_client_position(Location location) {
@@ -391,7 +405,7 @@ abstract public class MainActivity extends AppCompatActivity
         ref.setValue(user_location_marker.getPosition().toString());
     }
 
-    LatLng processCoordinates(String coords){
+    LatLng processCoordinates(String coords) {
         coords = coords.substring(10, coords.length() - 1);
         LatLng latLng = new LatLng(
                 Double.parseDouble(coords.substring(0, coords.indexOf(","))),
@@ -429,6 +443,7 @@ abstract public class MainActivity extends AppCompatActivity
 
     /**
      * show_peer_position
+     *
      * @param key:   userID de la database
      * @param value: valor de la posicion asociada.
      *               Ej: lat/lng: (-34.6231222,-58.3836347)
