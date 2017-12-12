@@ -21,6 +21,7 @@
         android:label="@string/Taller_Uber"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:screenOrientation="portrait"
         android:theme="@style/AppTheme">
         <activity
             android:name=".LoginActivity"
