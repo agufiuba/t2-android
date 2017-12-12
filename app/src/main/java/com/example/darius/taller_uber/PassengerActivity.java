@@ -529,6 +529,7 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 //            carSpecs = user_info.getJSONObject("last_name");
 
             TextView nombre = findViewById(R.id.car_specs_nombre);
+            TextView apellido = findViewById(R.id.car_specs_apellido);
             TextView color = findViewById(R.id.car_specs_color);
             TextView patente = findViewById(R.id.car_specs_patente);
             TextView estado = findViewById(R.id.car_specs_estado);
@@ -548,13 +549,14 @@ public class PassengerActivity extends MainActivity implements GoogleMap.OnMarke
 //            modelo.setText(carSpecs.getString("model"));
 
             /** Harcoding!! **/
-            nombre.setText("Fulano");
-            color.setText("Rojo");
-            patente.setText("AA2000");
+            nombre.setText("cris");
+            apellido.setText("gonzalez");
+            color.setText("Negro");
+            patente.setText("FFFFFFFF");
             anio.setText("2018");
             estado.setText("Nuevo");
             aire.setText("Si");
-            musica.setText("Clasica");
+            musica.setText("Jazz");
             modelo.setText("S10");
 
             this.car_specifications.setVisibility(View.VISIBLE);

@@ -42,15 +42,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             Log.d(TAG, remoteMessage.getData().toString());
             MessageRead messageRead = new MessageRead(remoteMessage);
             FCM_MESSAGE_TYPE message_type = messageRead.getMessage_type();
-            putExtras(message_type.name(),messageRead);
-
-//            Intent intent = new Intent("FCM_Message");
-//            intent.putExtra("passengerID", remoteMessage.getData().get("_passengerID"));
-//            intent.putExtra("from", remoteMessage.getData().get("_from"));
-//            intent.putExtra("to", remoteMessage.getData().get("_to"));
-//            intent.putExtra("name", remoteMessage.getData().get("_name"));
-//            intent.putExtra("last_name", remoteMessage.getData().get("_last_name"));
-//            broadcaster.sendBroadcast(intent);
+            putExtras(message_type.name(), messageRead);
 
         } catch (NullPointerException e) {
             Log.e(TAG, e.getMessage());
