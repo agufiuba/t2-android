@@ -406,10 +406,10 @@ abstract public class MainActivity extends AppCompatActivity
     }
 
     LatLng processCoordinates(String coords) {
-        coords = coords.substring(10, coords.length() - 1);
+        coords = coords.substring(coords.indexOf("(") + 1 , coords.length() - 1);
         LatLng latLng = new LatLng(
                 Double.parseDouble(coords.substring(0, coords.indexOf(","))),
-                Double.parseDouble(coords.substring(coords.indexOf(",") + 1, coords.length() - 1)));
+                Double.parseDouble(coords.substring(coords.indexOf(",") + 1, coords.length())));
         return latLng;
     }
 
